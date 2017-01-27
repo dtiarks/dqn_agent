@@ -417,7 +417,7 @@ if __name__ == '__main__':
                 obs=obsNew
 
                 if done:
-                    print "[Done! Avg R: %.2f]"%rMean
+                    print "[Done! Avg R: %.2f]"%rSum
                     break
      
     
