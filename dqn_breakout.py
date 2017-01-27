@@ -8,7 +8,6 @@ Created on Fri Jan 20 20:36:49 2017
 
 import gym
 import numpy as np
-import pylab as plt
 import tensorflow as tf
 import time
 from frame import FrameBatch
@@ -207,22 +206,6 @@ class DQNAgent(object):
             tf.summary.histogram('histogram', var)
             tf.summary.histogram('histogram_sum', tf.reduce_sum(var))
             
-    def _gen_plot(self,data,title=""):
-        """Create a pyplot plot and save to buffer."""
-        plt.figure()
-        plt.plot(data)
-        plt.title(title)
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        image = tf.image.decode_png(buf.getvalue(), channels=4)
-        image = tf.expand_dims(image, 0)
-        return image
-    
-    def addRewardSummary(self,data):
-        image = self._gen_plot(data)
-        
-        tf.summary.image("plot", image)
             
     def initSummaries(self):
         image = self._gen_plot([])
