@@ -208,10 +208,6 @@ class DQNAgent(object):
             
             
     def initSummaries(self):
-        image = self._gen_plot([])
-        
-        tf.summary.image("plot", image)
-        
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
         
