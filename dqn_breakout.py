@@ -17,6 +17,7 @@ import datetime
 import cv2
 import os
 import io
+import sys
 
 class QNet(object):
     def __init__(self,sess,name,params,train=True):
@@ -141,7 +142,7 @@ class DQNAgent(object):
         self.initTraining()
         self.initSummaries()
         
-       
+        os.mkdir(self.params['traindir'])
         subdir=datetime.datetime.now().strftime('%d%m%y_%H%M%S')
         self.traindir=os.path.join(params['traindir'], "run_%s"%subdir)
         os.mkdir(self.traindir)
@@ -331,7 +332,12 @@ class DQNAgent(object):
     def writeFrame(self,frame,episode,timestep):
         self._writeFrame(frame,episode,timestep,self.picdir)
 
-if __name__ == '__main__':       
+if __name__ == '__main__':      
+    if sys.argv[1] == None:
+        train_dir="./train_dir"
+    else:
+        train_dir=sys.argv[1]
+    
     env = gym.make('Breakout-v0')
     
     params={
@@ -352,7 +358,7 @@ if __name__ == '__main__':
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
-            "traindir":'./training',
+            "traindir":train_dir,
             "summary_steps":20,
             "skip_episodes": 50,
             "checkpoint_dir":'checkpoints',
