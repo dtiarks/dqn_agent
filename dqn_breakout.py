@@ -143,7 +143,7 @@ class DQNAgent(object):
         self.initTraining()
         self.initSummaries()
         
-        os.mkdir(self.params['traindir'])
+#        os.mkdir(self.params['traindir'])
         subdir=datetime.datetime.now().strftime('%d%m%y_%H%M%S')
         self.traindir=os.path.join(params['traindir'], "run_%s"%subdir)
         os.mkdir(self.traindir)
@@ -328,23 +328,24 @@ if __name__ == '__main__':
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":10000,
+            "replaymemory":1000000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
             "gradientmomentum":0.95,
             "sqgradientmomentum":0.95,
             "mingradientmomentum":0.01,
-            "initexploration":0.8,
+            "initexploration":1.0,
             "finalexploration":0.1,
-            "finalexpframe":100000,
-            "replaystartsize":2000,
+            "finalexpframe":200000,
+            "replaystartsize":50000,
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
             "traindir":train_dir,
-            "summary_steps":20,
+            "summary_steps":50,
             "skip_episodes": 50,
+            "framewrite_episodes":20,
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":500
     }
@@ -389,7 +390,7 @@ if __name__ == '__main__':
                 while fb.addFrame(f) is not True:
 #                    env.render()
                     f, r, d, _ = env.step(action)   
-                    if i>params['skip_episodes']:
+                    if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
                         dqa.writeFrame(f,i,t)
                     c+=1
                     rewards.append(r)
@@ -399,10 +400,6 @@ if __name__ == '__main__':
                 obsNew=fb.getNextBatch()
                 dqa.addTransition([obs,action, [r],obsNew, 6*[float((not done))]])
                 
-                if done:
-                    rSum=np.sum(rewards)
-                    cumRewards.append(rSum)
-                    dqa.saveRewards(cumRewards)
                 
                 loss=-1.
                 if c>=params['replaystartsize']:
@@ -422,6 +419,9 @@ if __name__ == '__main__':
                 obs=obsNew
 
                 if done:
+                    rSum=np.sum(rewards)
+                    cumRewards.append(rSum)
+                    dqa.saveRewards(cumRewards)
                     print "[Done! Avg R: %.2f]"%rSum
                     break
      
