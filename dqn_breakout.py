@@ -133,6 +133,8 @@ class DQNAgent(object):
         self.env=env
         self.sess=sess
         
+        self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32)
+        self.last_q=tf.Variable(0,name="cum_reward",dtype=tf.float32)
         self.eps=params['initexploration']
         self.q_predict=QNet(sess,"prediction",params)
         self.q_target=QNet(sess,"target",params,train=False)
@@ -208,6 +210,8 @@ class DQNAgent(object):
             
             
     def initSummaries(self):
+        with tf.name_scope("episode_stats"):
+            tf.summary.scalar('cum_reward', self.last_reward)
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
         
@@ -257,6 +261,7 @@ class DQNAgent(object):
                 self.q_target.done_placeholder: done_batch}
         
     def saveRewards(self,data):
+        self.last_reward.assign(data[-1]).op.run()
         reward_file=os.path.join(self.traindir, 'rewards.dat')
         np.savetxt(reward_file,np.array(data))
             
