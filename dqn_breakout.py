@@ -312,7 +312,7 @@ class DQNAgent(object):
         self._writeFrame(frame,episode,timestep,self.picdir)
 
 if __name__ == '__main__':      
-    if sys.argv[1] == None:
+    if len(sys.argv) == 1:
         train_dir="./train_dir"
     else:
         train_dir=sys.argv[1]
@@ -333,7 +333,7 @@ if __name__ == '__main__':
             "initexploration":0.8,
             "finalexploration":0.1,
             "finalexpframe":100000,
-            "replaystartsize":2,
+            "replaystartsize":2000,
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
@@ -392,7 +392,7 @@ if __name__ == '__main__':
                         done=True
                 
                 obsNew=fb.getNextBatch()
-                dqa.addTransition([obs,action, [r],obsNew, 6*[float(done)]])
+                dqa.addTransition([obs,action, [r],obsNew, 6*[float((not done))]])
                 
                 if done:
                     rSum=np.sum(rewards)
