@@ -134,7 +134,8 @@ class DQNAgent(object):
         self.sess=sess
         
         self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32)
-        self.last_q=tf.Variable(0,name="cum_reward",dtype=tf.float32)
+        self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32)
+        self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32)
         self.eps=params['initexploration']
         self.q_predict=QNet(sess,"prediction",params)
         self.q_target=QNet(sess,"target",params,train=False)
@@ -168,8 +169,9 @@ class DQNAgent(object):
         self.train_writer.close()
         
     def initTraining(self):
-        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=self.params['gradientmomentum'],
-                                              epsilon=self.params['mingradientmomentum'])
+#        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=self.params['gradientmomentum'],
+#                                              epsilon=self.params['mingradientmomentum'])
+        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'])
         
         self.global_step = tf.Variable(0, trainable=False)
         self.eps_op=tf.train.polynomial_decay(params['initexploration'], self.global_step,
@@ -206,12 +208,13 @@ class DQNAgent(object):
 #            tf.summary.scalar('maxq', tf.argmax(var))
             tf.summary.scalar('min', tf.reduce_min(var))
             tf.summary.histogram('histogram', var)
-            tf.summary.histogram('histogram_sum', tf.reduce_sum(var))
+            tf.summary.histogram('histogram_sum', tf.reduce_sum(var,1))
             
             
     def initSummaries(self):
         with tf.name_scope("episode_stats"):
             tf.summary.scalar('cum_reward', self.last_reward)
+            tf.summary.scalar('steps', self.last_steps)
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
         
@@ -219,10 +222,10 @@ class DQNAgent(object):
             self.variable_summaries(self.q_target.action_logits)
             
         with tf.name_scope("loss"):
-            self.variable_summaries(self.loss)
+            tf.summary.scalar('loss_val',self.loss)
             
-        with tf.name_scope("epsilon"):
-            self.variable_summaries(self.eps_op)
+#        with tf.name_scope("epsilon"):
+#            self.variable_summaries(self.eps_op)
         
     def addTransition(self,t):
         self.frame_buffer.appendleft(t[0])
@@ -260,14 +263,16 @@ class DQNAgent(object):
                 self.q_target.images_placeholder: frame2_batch,
                 self.q_target.done_placeholder: done_batch}
         
-    def saveRewards(self,data):
+    def saveRewards(self,data,steps=0):
         self.last_reward.assign(data[-1]).op.run()
+        self.last_steps.assign(steps).op.run()
         reward_file=os.path.join(self.traindir, 'rewards.dat')
         np.savetxt(reward_file,np.array(data))
             
         
     def takeAction(self,state=None):
-        self.eps=self.eps_op.eval()
+#        self.eps=self.eps_op.eval()
+        self.eps=params['finalexploration']
         g=0
 
         if state==None:
@@ -329,14 +334,14 @@ if __name__ == '__main__':
             "timesteps":10000,#10000,
             "batchsize":32,
             "replaymemory":1000000,
-            "targetupdate":10000,
+            "targetupdate":50,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
             "gradientmomentum":0.95,
             "sqgradientmomentum":0.95,
             "mingradientmomentum":0.01,
             "initexploration":1.0,
-            "finalexploration":0.1,
+            "finalexploration":0.05,
             "finalexpframe":200000,
             "replaystartsize":50000,
             "framesize":84,
@@ -345,7 +350,7 @@ if __name__ == '__main__':
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
-            "framewrite_episodes":20,
+            "framewrite_episodes":50,
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":500
     }
@@ -363,8 +368,8 @@ if __name__ == '__main__':
         
         #episode loop
         cumRewards=[]
-        t1=time.clock()
-        for i in xrange(params['episodes']):
+        
+        for i in xrange(1,params['episodes']):
             print "Starting new Episode (%d)!"%i
             f = env.reset()
             fb_init=FrameBatch(sess)
@@ -377,16 +382,20 @@ if __name__ == '__main__':
             obs=fb_init.getNextBatch()
             
             # time steps
+            
             rewards=[]
+            ts=[]
             done=False
             for t in xrange(params['timesteps']):
-                
+                t1=time.clock()
                 fb=FrameBatch(sess)
+                
                 if c<params['replaystartsize']:
                     action,g = dqa.takeAction()
                 else:
                     action,g = dqa.takeAction(obs)
-                
+                    
+                t1_frame=time.clock()
                 while fb.addFrame(f) is not True:
 #                    env.render()
                     f, r, d, _ = env.step(action)   
@@ -396,33 +405,37 @@ if __name__ == '__main__':
                     rewards.append(r)
                     if d:
                         done=True
-                
                 obsNew=fb.getNextBatch()
                 dqa.addTransition([obs,action, [r],obsNew, 6*[float((not done))]])
                 
                 
                 loss=-1.
                 if c>=params['replaystartsize']:
+                    t1_train=time.clock()
                     loss=dqa.trainNet()
+                    t2_train=time.clock()
+                    v2_train=t2_train-t1_train
                     train=True
                 
                 curr_xp=len(dqa.frame_buffer)
-                if t%20==0:
-                    t2=time.clock()
-                    dt=t2-t1
+                t2=time.clock()
+                dt=t2-t1
+                ts.append(dt)
+                tsa=np.array(ts)
+                if t%40==0:
+                    mean_t=np.mean(tsa)
                     
-                    print "[Timestep: %d (t: %.2f) || Action: %d (%d) || Loss: %.3f || Replaybuffer: %d || Train %r]"%(t,dt/60.,action,g,loss,curr_xp,train)
+                    print "[Timestep: %d (t: %.2f) || Action: %d (%d) || Loss: %.3f || Replaybuffer: %d || Train %r || Frame: %d]"%(t,mean_t,action,g,loss,curr_xp,train,c)
                     
-                if i%params['targetupdate']==0: #check this
-                    dqa.resetTarget()
-                
                 obs=obsNew
 
                 if done:
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
-                    dqa.saveRewards(cumRewards)
+                    dqa.saveRewards(cumRewards,t)
                     print "[Done! Avg R: %.2f]"%rSum
+                    if c%params['targetupdate']==0: #check this
+                               dqa.resetTarget()
                     break
      
     
