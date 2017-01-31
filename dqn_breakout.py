@@ -334,7 +334,7 @@ if __name__ == '__main__':
             "timesteps":10000,#10000,
             "batchsize":32,
             "replaymemory":1000000,
-            "targetupdate":50,
+            "targetupdate":30000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
             "gradientmomentum":0.95,
