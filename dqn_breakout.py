@@ -335,8 +335,8 @@ if __name__ == '__main__':
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":200000,
-            "targetupdate":3000,
+            "replaymemory":50000,
+            "targetupdate":300,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
             "gradientmomentum":0.95,
@@ -432,6 +432,7 @@ if __name__ == '__main__':
                 obs=obsNew
                 
                 if c%params['targetupdate']==0: #check this
+                           print "[+++Updating target net+++]"
                            dqa.resetTarget()
                 if done:
                     rSum=np.sum(rewards)
