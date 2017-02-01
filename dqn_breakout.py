@@ -114,8 +114,10 @@ class QNet(object):
         pass
     
     def _weight_variable(self,shape,name=None):
-        initial = tf.truncated_normal(shape, stddev=0.1)
+        initial = tf.truncated_normal(shape, stddev=0.07)
+#        initial = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
         return tf.Variable(initial,trainable=self.train,name=name)
+#        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
 
     def _bias_variable(self,shape,name=None):
         initial = tf.constant(0.1, shape=shape)
@@ -333,8 +335,8 @@ if __name__ == '__main__':
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":1000000,
-            "targetupdate":30000,
+            "replaymemory":200000,
+            "targetupdate":3000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
             "gradientmomentum":0.95,
@@ -363,7 +365,7 @@ if __name__ == '__main__':
         
         dqa=DQNAgent(sess,env,params)
         
-        c=0
+        c=1
         train=False
         
         #episode loop
@@ -428,16 +430,16 @@ if __name__ == '__main__':
                     print "[Timestep: %d (t: %.2f) || Action: %d (%d) || Loss: %.3f || Replaybuffer: %d || Train %r || Frame: %d]"%(t,mean_t,action,g,loss,curr_xp,train,c)
                     
                 obs=obsNew
-
+                
+                if c%params['targetupdate']==0: #check this
+                           dqa.resetTarget()
                 if done:
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
                     dqa.saveRewards(cumRewards,t)
                     print "[Done! Avg R: %.2f]"%rSum
-                    if c%params['targetupdate']==0: #check this
-                               dqa.resetTarget()
                     break
-     
+                
     
     env.close()
     
