@@ -195,10 +195,8 @@ class DQNAgent(object):
         qtarget=self.q_target.estimateQGreedy()
         
         
-        
-        op=tf.add_n([qtarget*vect, tf.negative(qpred)]) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
-
-        self.loss = tf.nn.l2_loss(op)
+        self.losses = tf.squared_difference(qtarget*vect, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
+        self.loss = tf.reduce_mean(self.losses)
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
 
@@ -426,8 +424,8 @@ if __name__ == '__main__':
                 dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                 
                 
-#                loss=-1.
-                loss=dqa.getLoss()
+                loss=-1.
+#                loss=dqa.getLoss()
                 if c>=params['replaystartsize']:
                     t1_train=time.clock()
                     loss=dqa.trainNet()
@@ -443,7 +441,7 @@ if __name__ == '__main__':
                 if t%40==0:
                     mean_t=np.mean(tsa)
                     
-                    print "[Timestep: %d (t: %.2f) || Action: %d (%d) || Loss: %.3f || Replaybuffer: %d || Train %r || Frame: %d]"%(t,mean_t,action,g,loss,curr_xp,train,c)
+                    print "[Timestep: %d (t: %.2f) || Action: %d (%d) || Loss: %.5f || Replaybuffer: %d || Train %r || Frame: %d]"%(t,mean_t,action,g,loss,curr_xp,train,c)
                     
                 obs=obsNew
                 
