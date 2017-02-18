@@ -39,38 +39,43 @@ class QNet(object):
             with tf.name_scope('conv1'):
                 # 8x8 conv, 4 inputs, 32 outputs, stride=4
                 self.W_conv1 = self._weight_variable([8, 8, 4, 32],"W_conv1")
-                self.b_conv1 = self._bias_variable([32],"b_conv1")
-                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
+#                self.b_conv1 = self._bias_variable([32],"b_conv1")
+#                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
+                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4))
     
             with tf.name_scope('conv2'):
                 # 4x4 conv, 32 inputs, 64 outputs, stride=2
                 self.W_conv2 = self._weight_variable([4, 4, 32, 64],"W_conv2")
-                self.b_conv2 = self._bias_variable([64],"b_conv2")
-                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
+#                self.b_conv2 = self._bias_variable([64],"b_conv2")
+#                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
+                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2))
                 
             with tf.name_scope('conv3'):
                 # 3x3 conv, 64 inputs, 64 outputs, stride=1
                 self.W_conv3 = self._weight_variable([3, 3, 64, 64],"W_conv3")
-                self.b_conv3 = self._bias_variable([64],"b_conv3")
-                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
+#                self.b_conv3 = self._bias_variable([64],"b_conv3")
+#                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
+                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1))
             
             dim=h_conv3.get_shape()
             dims=np.array([d.value for d in dim])
             reshaped_dim = np.prod(dims[1:])
             with tf.name_scope('dense1'):
                 self.W_fc1 = self._weight_variable([reshaped_dim, 512],"W_fc1")
-                self.b_fc1 = self._bias_variable([512],"b_fc1")
+#                self.b_fc1 = self._bias_variable([512],"b_fc1")
     
                 h_conv3_flat = tf.reshape(h_conv3, [-1, reshaped_dim])
-                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
+#                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
+                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1))
                 
             with tf.name_scope('output'):
                 self.W_fc2 = self._weight_variable([512, self.params['actionsize']],"W_fc2")
-                self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
+#                self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
     
-                self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
+#                self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
+                self.action_logits=tf.matmul(h_fc1, self.W_fc2)
                 
-            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
+#            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
             
         return self.action_logits
     
@@ -94,19 +99,24 @@ class QNet(object):
         return oh,out
     
     def getWeights(self):
-        return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
+#        return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
+        return [self.W_conv1,self.W_conv2,self.W_conv3,self.W_fc1,self.W_fc2]
     
     def updateWeights(self,w):
         tf.assign(self.W_conv1,w[0]).op.run()
-        tf.assign(self.b_conv1,w[1]).op.run()
-        tf.assign(self.W_conv2,w[2]).op.run()
-        tf.assign(self.b_conv2,w[3]).op.run()
-        tf.assign(self.W_conv3,w[4]).op.run()
-        tf.assign(self.b_conv3,w[5]).op.run()
-        tf.assign(self.W_fc1,w[6]).op.run()
-        tf.assign(self.b_fc1,w[7]).op.run()
-        tf.assign(self.W_fc2,w[8]).op.run()
-        tf.assign(self.b_fc2,w[9]).op.run()
+#        tf.assign(self.b_conv1,w[1]).op.run()
+#        tf.assign(self.W_conv2,w[2]).op.run()
+#        tf.assign(self.b_conv2,w[3]).op.run()
+#        tf.assign(self.W_conv3,w[4]).op.run()
+#        tf.assign(self.b_conv3,w[5]).op.run()
+#        tf.assign(self.W_fc1,w[6]).op.run()
+#        tf.assign(self.b_fc1,w[7]).op.run()
+#        tf.assign(self.W_fc2,w[8]).op.run()
+#        tf.assign(self.b_fc2,w[9]).op.run()
+        tf.assign(self.W_conv2,w[1]).op.run()
+        tf.assign(self.W_conv3,w[2]).op.run()
+        tf.assign(self.W_fc1,w[3]).op.run()
+        tf.assign(self.W_fc2,w[4]).op.run()
         
 
     def _makeFeeds(self):
@@ -120,7 +130,7 @@ class QNet(object):
 #        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
 
     def _bias_variable(self,shape,name=None):
-        initial = tf.constant(0.1, shape=shape)
+        initial = tf.constant(0., shape=shape)
         return tf.Variable(initial,trainable=self.train,name=name)
 
     def _conv2d(self,x, W, s):
@@ -171,9 +181,10 @@ class DQNAgent(object):
         self.train_writer.close()
         
     def initTraining(self):
-#        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=self.params['gradientmomentum'],
-#                                              epsilon=self.params['mingradientmomentum'])
-        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'])
+        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
+                                                   self.params['mingradientmomentum'],1e-6)
+#        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'])
+#        self.optimizer = tf.train.AdamOptimizer(self.params['learningrate'])
         
         self.global_step = tf.Variable(0, trainable=False)
         self.eps_op=tf.train.polynomial_decay(params['initexploration'], self.global_step,
@@ -290,7 +301,11 @@ class DQNAgent(object):
             
         return a,g
     
-    
+    def getLoss(self):
+        xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
+        l=self.sess.run(self.loss,feed_dict=xp_feed_dict)
+        return l
+        
     def trainNet(self):
         #Needs frameskipping: every C steps reset target weights!
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
@@ -336,19 +351,19 @@ if __name__ == '__main__':
             "timesteps":10000,#10000,
             "batchsize":32,
             "replaymemory":50000,
-            "targetupdate":300,
+            "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
-            "gradientmomentum":0.95,
+            "gradientmomentum":0.99,
             "sqgradientmomentum":0.95,
-            "mingradientmomentum":0.01,
+            "mingradientmomentum":0.001,
             "initexploration":1.0,
             "finalexploration":0.05,
             "finalexpframe":200000,
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
-            "actionsize": env.action_space.n,
+            "actionsize": 6,
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
@@ -408,10 +423,11 @@ if __name__ == '__main__':
                     if d:
                         done=True
                 obsNew=fb.getNextBatch()
-                dqa.addTransition([obs,action, [r],obsNew, 6*[float((not done))]])
+                dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                 
                 
-                loss=-1.
+#                loss=-1.
+                loss=dqa.getLoss()
                 if c>=params['replaystartsize']:
                     t1_train=time.clock()
                     loss=dqa.trainNet()
