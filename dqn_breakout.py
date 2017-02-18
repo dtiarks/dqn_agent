@@ -196,7 +196,7 @@ class DQNAgent(object):
         
         
         
-        op=tf.add_n([qtarget*vect, tf.neg(qpred)]) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
+        op=tf.add_n([qtarget*vect, tf.negative(qpred)]) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
 
         self.loss = tf.nn.l2_loss(op)
         
