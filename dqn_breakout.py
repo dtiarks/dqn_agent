@@ -6,6 +6,8 @@ Created on Fri Jan 20 20:36:49 2017
 @author: daniel
 """
 
+from __future__ import print_function
+
 import gym
 import numpy as np
 import tensorflow as tf
@@ -89,14 +91,18 @@ class QNet(object):
     def estimateQGreedy(self):
         lg=self.action_logits*self.done_placeholder
 #        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],self.action_logits),1,keep_dims=True)
-        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=True)
+#        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=True)
+        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=False)
 
         return tf.add(eval_op,self.reward_placeholder) #does this the right thing???
     
     def estimateAction(self):
-        oh=tf.one_hot(self.action_placeholder,self.params['actionsize'])
-        out=self.action_logits*oh
-        return oh,out
+#        oh=tf.one_hot(self.action_placeholder,self.params['actionsize'])
+#        out=self.action_logits*oh
+        gather_indices = tf.range(self.params['batchsize']) * tf.shape(self.action_logits)[1] + self.action_placeholder
+        self.action_predictions = tf.gather(tf.reshape(self.action_logits, [-1]), gather_indices)
+#        return oh,out
+        return self.action_predictions
     
     def getWeights(self):
 #        return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
@@ -191,11 +197,13 @@ class DQNAgent(object):
                                           params['finalexpframe'], params['finalexploration'],
                                           power=1)
         
-        vect,qpred=self.q_predict.estimateAction()
+#        vect,qpred=self.q_predict.estimateAction()
+        qpred=self.q_predict.estimateAction()
         qtarget=self.q_target.estimateQGreedy()
         
         
-        self.losses = tf.squared_difference(qtarget*vect, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
+#        self.losses = tf.squared_difference(qtarget*vect, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
+        self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
         self.loss = tf.reduce_mean(self.losses)
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
@@ -317,7 +325,7 @@ class DQNAgent(object):
         if self.global_step.eval()%self.params['checkpoint_steps']==0:
             checkpoint_file = os.path.join(self.traindir,self.params['checkpoint_dir'], 'checkpoint')
             name=self.saver.save(self.sess, checkpoint_file, global_step=self.global_step.eval())
-            print "Saving checkpoint: %s"%name
+            print("Saving checkpoint: %s"%name)
         
         return l
         
@@ -385,7 +393,7 @@ if __name__ == '__main__':
         cumRewards=[]
         
         for i in xrange(1,params['episodes']):
-            print "Starting new Episode (%d)!"%i
+#            print "Starting new Episode (%d)!"%i
             f = env.reset()
             fb_init=FrameBatch(sess)
             
@@ -425,7 +433,11 @@ if __name__ == '__main__':
                 
                 
                 loss=-1.
-#                loss=dqa.getLoss()
+#                t1_loss=time.clock()
+##                loss=dqa.getLoss()
+#                t2_loss=time.clock()
+#                v2_loss=t2_loss-t1_loss
+#                print "Loss calculation time: %.2f:"%v2_loss
                 if c>=params['replaystartsize']:
                     t1_train=time.clock()
                     loss=dqa.trainNet()
@@ -441,18 +453,20 @@ if __name__ == '__main__':
                 if t%40==0:
                     mean_t=np.mean(tsa)
                     
-                    print "[Timestep: %d (t: %.2f) || Action: %d (%d) || Loss: %.5f || Replaybuffer: %d || Train %r || Frame: %d]"%(t,mean_t,action,g,loss,curr_xp,train,c)
+#                    print("\r [Timestep: {} (t: {}) || Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {} || Train {} || Frame: {}]".format(t,mean_t,i,action,g,loss,curr_xp,train,c),end='')
+                    print("\r[Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,action,g,loss,curr_xp,c),end='')
+                    sys.stdout.flush()
                     
                 obs=obsNew
                 
                 if c%params['targetupdate']==0: #check this
-                           print "[+++Updating target net+++]"
+#                           print "[+++Updating target net+++]"
                            dqa.resetTarget()
                 if done:
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
                     dqa.saveRewards(cumRewards,t)
-                    print "[Done! Avg R: %.2f]"%rSum
+#                    print "[Done! Avg R: %.2f]"%rSum
                     break
                 
     
