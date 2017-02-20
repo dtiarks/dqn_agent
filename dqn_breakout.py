@@ -290,8 +290,7 @@ class DQNAgent(object):
             
         
     def takeAction(self,state=None):
-#        self.eps=self.eps_op.eval()
-        self.eps=params['finalexploration']
+        self.eps=self.eps_op.eval()
         g=0
 
         if state==None:
