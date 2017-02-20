@@ -308,7 +308,7 @@ class DQNAgent(object):
             
         
     def takeAction(self,state=None):
-        self.eps=0*self.eps_op.eval()
+        self.eps=self.eps_op.eval()
         g=0
 
         if state==None:
@@ -383,7 +383,7 @@ if __name__ == '__main__':
             "initexploration":1.0,
             "finalexploration":0.05,
             "finalexpframe":200000,
-            "replaystartsize":500,
+            "replaystartsize":50000,
             "framesize":84,
             "frames":4,
             "actionsize": 6,
@@ -392,7 +392,7 @@ if __name__ == '__main__':
             "skip_episodes": 50,
             "framewrite_episodes":50,
             "checkpoint_dir":'checkpoints',
-            "checkpoint_steps":500
+            "checkpoint_steps":2000
     }
     
     tf.reset_default_graph()
@@ -462,7 +462,7 @@ if __name__ == '__main__':
                 curr_xp=len(dqa.frame_buffer)
                 t2=time.clock()
                 dt=t2-t1
-                print("frame time: {}".format(dt))
+#                print("frame time: {}".format(dt))
                 ts.append(dt)
                 tsa=np.array(ts)
                 if t%40==0:
