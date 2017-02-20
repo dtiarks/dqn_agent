@@ -428,11 +428,10 @@ if __name__ == '__main__':
                     rewards.append(r)
                     if d:
                         done=True
-                t1_batch=time.clock()
                 obsNew=fb.getNextBatch()
                 dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
-                t2_batch=time.clock()
-                dt=t2_batch-t1_batch
+                t2_frame=time.clock()
+                dt=t2_frame-t1_frame
                 if c>params['replaystartsize']:
                     print("Batch time: {}".format(dt))
                 
