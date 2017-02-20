@@ -38,70 +38,67 @@ class QNet(object):
         input_layer = self.images_placeholder
 
         with tf.name_scope(self.name):
-            self.W_conv1 = tf.contrib.layers.conv2d(input_layer, 32, 8, 4, activation_fn=tf.nn.relu)
-            self.W_conv2 = tf.contrib.layers.conv2d(self.W_conv1, 64, 4, 2, activation_fn=tf.nn.relu)
-            self.W_conv3 = tf.contrib.layers.conv2d(self.W_conv2, 64, 3, 1, activation_fn=tf.nn.relu)
-
-#             Fully connected layers
-            self.W_fc1 = tf.contrib.layers.flatten(self.W_conv3)
-            self.W_fc2 = tf.contrib.layers.fully_connected(self.W_fc1, 512)
-            self.action_logits = tf.contrib.layers.fully_connected(self.W_fc2, 6)
-#            with tf.name_scope('conv1'):
-#                # 8x8 conv, 4 inputs, 32 outputs, stride=4
-#                self.W_conv1 = self._weight_variable([8, 8, 4, 32],"W_conv1")
-##                self.b_conv1 = self._bias_variable([32],"b_conv1")
-##                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
-#                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4))
-#    
-#            with tf.name_scope('conv2'):
-#                # 4x4 conv, 32 inputs, 64 outputs, stride=2
-#                self.W_conv2 = self._weight_variable([4, 4, 32, 64],"W_conv2")
-##                self.b_conv2 = self._bias_variable([64],"b_conv2")
-##                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
-#                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2))
-#                
-#            with tf.name_scope('conv3'):
-#                # 3x3 conv, 64 inputs, 64 outputs, stride=1
-#                self.W_conv3 = self._weight_variable([3, 3, 64, 64],"W_conv3")
-##                self.b_conv3 = self._bias_variable([64],"b_conv3")
-##                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
-#                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1))
-#            
-##            dim=h_conv3.get_shape()
-##            dims=np.array([d.value for d in dim])
-##            reshaped_dim = np.prod(dims[1:])
-#            with tf.name_scope('dense1'):
-##                self.W_fc1 = self._weight_variable([reshaped_dim, 512],"W_fc1")
-##                self.b_fc1 = self._bias_variable([512],"b_fc1")
-#    
-##                h_conv3_flat = tf.reshape(h_conv3, [-1, reshaped_dim])
+#            self.W_conv1 = tf.contrib.layers.conv2d(input_layer, 32, 8, 4, activation_fn=tf.nn.relu)
+#            self.W_conv2 = tf.contrib.layers.conv2d(self.W_conv1, 64, 4, 2, activation_fn=tf.nn.relu)
+#            self.W_conv3 = tf.contrib.layers.conv2d(self.W_conv2, 64, 3, 1, activation_fn=tf.nn.relu)
+#
+##             Fully connected layers
+#            self.W_fc1 = tf.contrib.layers.flatten(self.W_conv3)
+#            self.W_fc2 = tf.contrib.layers.fully_connected(self.W_fc1, 512)
+#            self.action_logits = tf.contrib.layers.fully_connected(self.W_fc2, 6)
+            with tf.name_scope('conv1'):
+                # 8x8 conv, 4 inputs, 32 outputs, stride=4
+                self.W_conv1 = self._weight_variable([8, 8, 4, 32],"W_conv1")
+#                self.b_conv1 = self._bias_variable([32],"b_conv1")
+#                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
+                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4))
+    
+            with tf.name_scope('conv2'):
+                # 4x4 conv, 32 inputs, 64 outputs, stride=2
+                self.W_conv2 = self._weight_variable([4, 4, 32, 64],"W_conv2")
+#                self.b_conv2 = self._bias_variable([64],"b_conv2")
+#                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
+                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2))
+                
+            with tf.name_scope('conv3'):
+                # 3x3 conv, 64 inputs, 64 outputs, stride=1
+                self.W_conv3 = self._weight_variable([3, 3, 64, 64],"W_conv3")
+#                self.b_conv3 = self._bias_variable([64],"b_conv3")
+#                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
+                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1))
+            
+            dim=h_conv3.get_shape()
+            dims=np.array([d.value for d in dim])
+            reshaped_dim = np.prod(dims[1:])
+            with tf.name_scope('dense1'):
+                self.W_fc1 = self._weight_variable([reshaped_dim, 512],"W_fc1")
+#                self.b_fc1 = self._bias_variable([512],"b_fc1")
+    
+                h_conv3_flat = tf.reshape(h_conv3, [-1, reshaped_dim])
 #                h_conv3_flat = tf.contrib.layers.flatten(h_conv3)
-##                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
-##                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1))
+#                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
+                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1))
 #                h_fc1 = tf.contrib.layers.fully_connected(h_conv3_flat, 512)
+                
+            with tf.name_scope('output'):
+                self.W_fc2 = self._weight_variable([512, self.params['actionsize']],"W_fc2")
+#                self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
+    
+#                self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
+                self.action_logits=tf.matmul(h_fc1, self.W_fc2)
 #                
-#            with tf.name_scope('output'):
-#                self.W_fc2 = self._weight_variable([512, self.params['actionsize']],"W_fc2")
-##                self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
-#    
-##                self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
-#                self.action_logits=tf.matmul(h_fc1, self.W_fc2)
-##                
-###            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
+##            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
 
         
-            
+        self.greedy_actions=tf.argmax(self.action_logits,1)
         return self.action_logits
     
     def estimateActionGreedy(self,state_feed):
-        self.greedy_actions=tf.argmax(self.action_logits,1)
+#        self.greedy_actions=tf.argmax(self.action_logits,1)
         feed=np.expand_dims(state_feed,axis=0)
-        t1_frame=time.clock()
         prediction_index = self.sess.run(self.greedy_actions,
                           feed_dict={self.images_placeholder: feed})
-        t2_frame=time.clock()
-        dt=t2_frame-t1_frame
-        print("Batch time: {}, len: {}".format(dt,feed.shape))
+
         return prediction_index[0]
     
     def estimateQGreedy(self):
@@ -124,11 +121,11 @@ class QNet(object):
     
     def getWeights(self):
 #        return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
-#        return [self.W_conv1,self.W_conv2,self.W_conv3,None,self.W_fc2]
-        pass
+        return [self.W_conv1,self.W_conv2,self.W_conv3,self.W_fc1,self.W_fc2]
+#        pass
     
     def updateWeights(self,w):
-#        tf.assign(self.W_conv1,w[0]).op.run()
+        tf.assign(self.W_conv1,w[0]).op.run()
 #        tf.assign(self.b_conv1,w[1]).op.run()
 #        tf.assign(self.W_conv2,w[2]).op.run()
 #        tf.assign(self.b_conv2,w[3]).op.run()
@@ -138,11 +135,11 @@ class QNet(object):
 #        tf.assign(self.b_fc1,w[7]).op.run()
 #        tf.assign(self.W_fc2,w[8]).op.run()
 #        tf.assign(self.b_fc2,w[9]).op.run()
-#        tf.assign(self.W_conv2,w[1]).op.run()
-#        tf.assign(self.W_conv3,w[2]).op.run()
-#        tf.assign(self.W_fc1,w[3]).op.run()
-#        tf.assign(self.W_fc2,w[4]).op.run()
-        pass
+        tf.assign(self.W_conv2,w[1]).op.run()
+        tf.assign(self.W_conv3,w[2]).op.run()
+        tf.assign(self.W_fc1,w[3]).op.run()
+        tf.assign(self.W_fc2,w[4]).op.run()
+#        pass
         
 
     def _makeFeeds(self):
@@ -200,6 +197,7 @@ class DQNAgent(object):
         
         sess.run(init)
         self.q_target.updateWeights(self.q_predict.getWeights())
+        sess.graph.finalize()
         #Summaries: Max Q (from action request) for episode (need reset func called after each episode), timesteps per episode
         #avg q per episode (laser 20 or so), cumm reward per episode, avg last 20 reward per episode, loss,eps,gifs?
     
@@ -303,8 +301,8 @@ class DQNAgent(object):
                 self.q_target.done_placeholder: done_batch}
         
     def saveRewards(self,data,steps=0):
-        self.last_reward.assign(data[-1]).op.run()
-        self.last_steps.assign(steps).op.run()
+#        self.last_reward.assign(data[-1]).op.run()
+#        self.last_steps.assign(steps).op.run()
         reward_file=os.path.join(self.traindir, 'rewards.dat')
         np.savetxt(reward_file,np.array(data))
             
