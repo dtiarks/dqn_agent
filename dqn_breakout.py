@@ -84,8 +84,12 @@ class QNet(object):
     def estimateActionGreedy(self,state_feed):
         self.greedy_actions=tf.argmax(self.action_logits,1)
         feed=np.expand_dims(state_feed,axis=0)
+        t1_frame=time.clock()
         prediction_index = self.sess.run(self.greedy_actions,
                           feed_dict={self.images_placeholder: feed})
+        t2_frame=time.clock()
+        dt=t2_frame-t1_frame
+        print("Batch time: {}".format(dt))
         return prediction_index[0]
     
     def estimateQGreedy(self):
@@ -290,7 +294,7 @@ class DQNAgent(object):
             
         
     def takeAction(self,state=None):
-        self.eps=self.eps_op.eval()
+        self.eps=0*self.eps_op.eval()
         g=0
 
         if state==None:
@@ -411,16 +415,10 @@ if __name__ == '__main__':
             for t in xrange(params['timesteps']):
                 t1=time.clock()
                 fb=FrameBatch(sess)
-                t1_frame=time.clock()
                 if c<params['replaystartsize']:
                     action,g = dqa.takeAction()
                 else:
                     action,g = dqa.takeAction(obs)
-                    
-                t2_frame=time.clock()
-                dt=t2_frame-t1_frame
-                if c>params['replaystartsize']:
-                    print("Batch time: {}".format(dt))
                     
                 while fb.addFrame(f) is not True:
 #                    env.render()
