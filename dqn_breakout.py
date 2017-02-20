@@ -197,7 +197,7 @@ class DQNAgent(object):
         
         sess.run(init)
         self.q_target.updateWeights(self.q_predict.getWeights())
-        sess.graph.finalize()
+#        sess.graph.finalize()
         #Summaries: Max Q (from action request) for episode (need reset func called after each episode), timesteps per episode
         #avg q per episode (laser 20 or so), cumm reward per episode, avg last 20 reward per episode, loss,eps,gifs?
     
