@@ -443,6 +443,7 @@ if __name__ == '__main__':
                     loss=dqa.trainNet()
                     t2_train=time.clock()
                     v2_train=t2_train-t1_train
+                    print("Train time: {}".format(v2_train))
                     train=True
                 
                 curr_xp=len(dqa.frame_buffer)
