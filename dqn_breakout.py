@@ -366,7 +366,7 @@ if __name__ == '__main__':
             "initexploration":1.0,
             "finalexploration":0.05,
             "finalexpframe":200000,
-            "replaystartsize":50000,
+            "replaystartsize":500,
             "framesize":84,
             "frames":4,
             "actionsize": 6,
