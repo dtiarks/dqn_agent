@@ -261,8 +261,8 @@ class DQNAgent(object):
         with tf.name_scope("loss"):
             tf.summary.scalar('loss_val',self.loss)
             
-#        with tf.name_scope("epsilon"):
-#            self.variable_summaries(self.eps_op)
+        with tf.name_scope("epsilon"):
+            tf.summary.scalar('eps_val',self.eps_op)
         
     def addTransition(self,t):
         self.frame_buffer.appendleft(t[0])
