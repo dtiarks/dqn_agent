@@ -308,7 +308,7 @@ class DQNAgent(object):
             
         
     def takeAction(self,state=None):
-        self.eps=self.eps_op.eval()
+        self.eps=0*self.eps_op.eval()
         g=0
 
         if state==None:
@@ -462,7 +462,7 @@ if __name__ == '__main__':
                 curr_xp=len(dqa.frame_buffer)
                 t2=time.clock()
                 dt=t2-t1
-#                print("frame time: {}".format(dt))
+                print("frame time: {}".format(dt))
                 ts.append(dt)
                 tsa=np.array(ts)
                 if t%40==0:
