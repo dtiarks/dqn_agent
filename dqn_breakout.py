@@ -168,9 +168,9 @@ class DQNAgent(object):
         self.env=env
         self.sess=sess
         
-        self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32)
-        self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32)
-        self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32)
+        self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32,trainable=False)
+        self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32,trainable=False)
+        self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32,trainable=False)
         self.eps=params['initexploration']
         self.q_predict=QNet(sess,"prediction",params)
         self.q_target=QNet(sess,"target",params,train=False)
@@ -308,7 +308,7 @@ class DQNAgent(object):
             
         
     def takeAction(self,state=None):
-        self.eps=0*self.eps_op.eval()
+        self.eps=self.eps_op.eval()
         g=0
 
         if state==None:
