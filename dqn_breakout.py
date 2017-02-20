@@ -433,7 +433,8 @@ if __name__ == '__main__':
                 dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                 t2_batch=time.clock()
                 dt=t2_batch-t1_batch
-                print("Batch time: {}".format(dt))
+                if c>params['replaystartsize']:
+                    print("Batch time: {}".format(dt))
                 
                 loss=-1.
 #                t1_loss=time.clock()
