@@ -301,8 +301,8 @@ class DQNAgent(object):
                 self.q_target.done_placeholder: done_batch}
         
     def saveRewards(self,data,steps=0):
-#        self.last_reward.assign(data[-1]).op.run()
-#        self.last_steps.assign(steps).op.run()
+        self.last_reward.assign(data[-1]).op.run()
+        self.last_steps.assign(steps).op.run()
         reward_file=os.path.join(self.traindir, 'rewards.dat')
         np.savetxt(reward_file,np.array(data))
             
