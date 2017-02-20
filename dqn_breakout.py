@@ -428,9 +428,12 @@ if __name__ == '__main__':
                     rewards.append(r)
                     if d:
                         done=True
+                t1_batch=time.clock()
                 obsNew=fb.getNextBatch()
                 dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
-                
+                t2_batch=time.clock()
+                dt=t2_batch-t1_batch
+                print("Batch time: {}".format(dt))
                 
                 loss=-1.
 #                t1_loss=time.clock()
@@ -448,8 +451,6 @@ if __name__ == '__main__':
                 curr_xp=len(dqa.frame_buffer)
                 t2=time.clock()
                 dt=t2-t1
-                if train:
-                    print("Train time: {}; Frame time: {}".format(v2_train,dt))
                 ts.append(dt)
                 tsa=np.array(ts)
                 if t%40==0:
