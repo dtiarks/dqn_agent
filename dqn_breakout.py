@@ -150,7 +150,7 @@ class QNet(object):
         pass
     
     def _weight_variable(self,shape,name=None):
-        initial = tf.truncated_normal(shape, stddev=0.25)
+        initial = tf.truncated_normal(shape, stddev=0.1)
 #        initial = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
         return tf.Variable(initial,trainable=self.train,name=name)
 #        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
