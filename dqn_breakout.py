@@ -49,45 +49,45 @@ class QNet(object):
             with tf.name_scope('conv1'):
                 # 8x8 conv, 4 inputs, 32 outputs, stride=4
                 self.W_conv1 = self._weight_variable([8, 8, 4, 32],"W_conv1")
-#                self.b_conv1 = self._bias_variable([32],"b_conv1")
-#                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
-                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4))
+                self.b_conv1 = self._bias_variable([32],"b_conv1")
+                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
+#                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4))
     
             with tf.name_scope('conv2'):
                 # 4x4 conv, 32 inputs, 64 outputs, stride=2
                 self.W_conv2 = self._weight_variable([4, 4, 32, 64],"W_conv2")
-#                self.b_conv2 = self._bias_variable([64],"b_conv2")
-#                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
-                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2))
+                self.b_conv2 = self._bias_variable([64],"b_conv2")
+                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
+#                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2))
                 
             with tf.name_scope('conv3'):
                 # 3x3 conv, 64 inputs, 64 outputs, stride=1
                 self.W_conv3 = self._weight_variable([3, 3, 64, 64],"W_conv3")
-#                self.b_conv3 = self._bias_variable([64],"b_conv3")
-#                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
-                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1))
+                self.b_conv3 = self._bias_variable([64],"b_conv3")
+                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
+#                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1))
             
             dim=h_conv3.get_shape()
             dims=np.array([d.value for d in dim])
             reshaped_dim = np.prod(dims[1:])
             with tf.name_scope('dense1'):
                 self.W_fc1 = self._weight_variable([reshaped_dim, 512],"W_fc1")
-#                self.b_fc1 = self._bias_variable([512],"b_fc1")
+                self.b_fc1 = self._bias_variable([512],"b_fc1")
     
                 h_conv3_flat = tf.reshape(h_conv3, [-1, reshaped_dim])
 #                h_conv3_flat = tf.contrib.layers.flatten(h_conv3)
-#                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
-                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1))
+                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
+#                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1))
 #                h_fc1 = tf.contrib.layers.fully_connected(h_conv3_flat, 512)
                 
             with tf.name_scope('output'):
                 self.W_fc2 = self._weight_variable([512, self.params['actionsize']],"W_fc2")
-#                self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
+                self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
     
-#                self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
-                self.action_logits=tf.matmul(h_fc1, self.W_fc2)
-#                
-##            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
+                self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
+#                self.action_logits=tf.matmul(h_fc1, self.W_fc2)
+##                
+###            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
 
         
         self.greedy_actions=tf.argmax(self.action_logits,1)
@@ -120,26 +120,29 @@ class QNet(object):
         return self.action_predictions
     
     def getWeights(self):
-#        return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
-        return [self.W_conv1,self.W_conv2,self.W_conv3,self.W_fc1,self.W_fc2]
+        return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
+#        return [self.W_conv1,self.W_conv2,self.W_conv3,self.W_fc1,self.W_fc2]
 #        pass
     
     def updateWeights(self,w):
+        vs=tf.trainable_variables()
+        for v in vs:
+            print(v.name)
         tf.assign(self.W_conv1,w[0]).op.run()
-#        tf.assign(self.b_conv1,w[1]).op.run()
-#        tf.assign(self.W_conv2,w[2]).op.run()
-#        tf.assign(self.b_conv2,w[3]).op.run()
-#        tf.assign(self.W_conv3,w[4]).op.run()
-#        tf.assign(self.b_conv3,w[5]).op.run()
-#        tf.assign(self.W_fc1,w[6]).op.run()
-#        tf.assign(self.b_fc1,w[7]).op.run()
-#        tf.assign(self.W_fc2,w[8]).op.run()
-#        tf.assign(self.b_fc2,w[9]).op.run()
-        tf.assign(self.W_conv2,w[1]).op.run()
-        tf.assign(self.W_conv3,w[2]).op.run()
-        tf.assign(self.W_fc1,w[3]).op.run()
-        tf.assign(self.W_fc2,w[4]).op.run()
-#        pass
+        tf.assign(self.b_conv1,w[1]).op.run()
+        tf.assign(self.W_conv2,w[2]).op.run()
+        tf.assign(self.b_conv2,w[3]).op.run()
+        tf.assign(self.W_conv3,w[4]).op.run()
+        tf.assign(self.b_conv3,w[5]).op.run()
+        tf.assign(self.W_fc1,w[6]).op.run()
+        tf.assign(self.b_fc1,w[7]).op.run()
+        tf.assign(self.W_fc2,w[8]).op.run()
+        tf.assign(self.b_fc2,w[9]).op.run()
+
+#        tf.assign(self.W_conv2,w[1]).op.run()
+#        tf.assign(self.W_conv3,w[2]).op.run()
+#        tf.assign(self.W_fc1,w[3]).op.run()
+#        tf.assign(self.W_fc2,w[4]).op.run()
         
 
     def _makeFeeds(self):
@@ -310,12 +313,16 @@ class DQNAgent(object):
     def takeAction(self,state=None):
         self.eps=self.eps_op.eval()
         g=0
+        
+        actions=range(self.params['actionsize'])
 
         if state==None:
-            a=self.env.action_space.sample()
+#            a=self.env.action_space.sample()
+            a=np.random.choice(actions)
         else:
             if np.random.random()<self.eps:
-                a=self.env.action_space.sample()
+#                a=self.env.action_space.sample()
+                a=np.random.choice(actions)
                     
             else:
                 action_index=self.q_predict.estimateActionGreedy(state)
@@ -379,14 +386,14 @@ if __name__ == '__main__':
             "learningrate":0.00025,#0.00025,
             "gradientmomentum":0.99,
             "sqgradientmomentum":0.95,
-            "mingradientmomentum":0.001,
+            "mingradientmomentum":0.00,
             "initexploration":1.0,
-            "finalexploration":0.05,
-            "finalexpframe":200000,
+            "finalexploration":0.1,
+            "finalexpframe":100000,
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
-            "actionsize": 6,
+            "actionsize": 4,
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
