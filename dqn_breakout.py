@@ -121,13 +121,8 @@ class QNet(object):
     
     def getWeights(self):
         return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
-#        return [self.W_conv1,self.W_conv2,self.W_conv3,self.W_fc1,self.W_fc2]
-#        pass
     
     def updateWeights(self,w):
-        vs=tf.trainable_variables()
-        for v in vs:
-            print(v.name)
         tf.assign(self.W_conv1,w[0]).op.run()
         tf.assign(self.b_conv1,w[1]).op.run()
         tf.assign(self.W_conv2,w[2]).op.run()
@@ -139,18 +134,14 @@ class QNet(object):
         tf.assign(self.W_fc2,w[8]).op.run()
         tf.assign(self.b_fc2,w[9]).op.run()
 
-#        tf.assign(self.W_conv2,w[1]).op.run()
-#        tf.assign(self.W_conv3,w[2]).op.run()
-#        tf.assign(self.W_fc1,w[3]).op.run()
-#        tf.assign(self.W_fc2,w[4]).op.run()
-        
 
     def _makeFeeds(self):
         #must return two feeds: greedy target q-values and prediction q-values
         pass
     
     def _weight_variable(self,shape,name=None):
-        initial = tf.truncated_normal(shape, stddev=0.1)
+#        initial = tf.truncated_normal(shape, stddev=0.1)
+        initial = tf.constant(0.00001, shape=shape)
 #        initial = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
         return tf.Variable(initial,trainable=self.train,name=name)
 #        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
@@ -380,7 +371,7 @@ if __name__ == '__main__':
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":50000,
+            "replaymemory":1000000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
@@ -389,7 +380,7 @@ if __name__ == '__main__':
             "mingradientmomentum":0.00,
             "initexploration":1.0,
             "finalexploration":0.1,
-            "finalexpframe":100000,
+            "finalexpframe":1000000,
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
@@ -397,9 +388,9 @@ if __name__ == '__main__':
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
-            "framewrite_episodes":50,
+            "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
-            "checkpoint_steps":2000
+            "checkpoint_steps":200000
     }
     
     tf.reset_default_graph()
@@ -482,13 +473,13 @@ if __name__ == '__main__':
                 obs=obsNew
                 
                 if c%params['targetupdate']==0: #check this
-#                           print "[+++Updating target net+++]"
                            dqa.resetTarget()
                 if done:
+                    if i%params['framewrite_episodes']==0:
+                        print(rewards)
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
                     dqa.saveRewards(cumRewards,t)
-#                    print "[Done! Avg R: %.2f]"%rSum
                     break
                 
     
