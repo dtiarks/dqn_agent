@@ -140,8 +140,8 @@ class QNet(object):
         pass
     
     def _weight_variable(self,shape,name=None):
-#        initial = tf.truncated_normal(shape, stddev=0.1)
-        initial = tf.constant(0.00001, shape=shape)
+        initial = tf.truncated_normal(shape, stddev=0.05)
+#        initial = tf.constant(0.00001, shape=shape)
 #        initial = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
         return tf.Variable(initial,trainable=self.train,name=name)
 #        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
@@ -371,7 +371,7 @@ if __name__ == '__main__':
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":1000000,
+            "replaymemory":500000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
