@@ -9,8 +9,10 @@ Created on Fri Jan 20 20:36:49 2017
 from __future__ import print_function
 
 import gym
+from gym import wrappers
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.tensorboard.plugins import projector
 import time
 from frame import FrameBatch
 from collections import deque  
@@ -26,7 +28,7 @@ class QNet(object):
         self.sess=sess
         self.name=name
         self.input_shape=[None ,params['framesize'],params['framesize'],params['frames']] #add to hyperparamters
-        self.images_placeholder = tf.placeholder(tf.float32,shape=self.input_shape)
+        self.images_placeholder = tf.placeholder(tf.uint8,shape=self.input_shape)
         self.target_placeholder = tf.placeholder(tf.int32,shape=[None,params['actionsize']])
         self.reward_placeholder = tf.placeholder(tf.float32,shape=[None,1])
         self.action_placeholder = tf.placeholder(tf.int32,shape=[None])
@@ -35,7 +37,7 @@ class QNet(object):
         self.buildNet()
         
     def buildNet(self):
-        input_layer = self.images_placeholder
+        input_layer = tf.to_float(self.images_placeholder)/255.
 
         with tf.name_scope(self.name):
 #            self.W_conv1 = tf.contrib.layers.conv2d(input_layer, 32, 8, 4, activation_fn=tf.nn.relu)
@@ -103,8 +105,6 @@ class QNet(object):
     
     def estimateQGreedy(self):
         lg=self.action_logits*self.done_placeholder
-#        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],self.action_logits),1,keep_dims=True)
-#        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=True)
         eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=False)
 
         return tf.add(eval_op,self.reward_placeholder) #does this the right thing???
@@ -141,8 +141,6 @@ class QNet(object):
     
     def _weight_variable(self,shape,name=None):
         initial = tf.truncated_normal(shape, stddev=0.05)
-#        initial = tf.constant(0.00001, shape=shape)
-#        initial = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
         return tf.Variable(initial,trainable=self.train,name=name)
 #        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
 
@@ -201,8 +199,6 @@ class DQNAgent(object):
     def initTraining(self):
         self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
                                                    self.params['mingradientmomentum'],1e-6)
-#        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'])
-#        self.optimizer = tf.train.AdamOptimizer(self.params['learningrate'])
         
         self.global_step = tf.Variable(0, trainable=False)
         self.eps_op=tf.train.polynomial_decay(params['initexploration'], self.global_step,
@@ -213,12 +209,10 @@ class DQNAgent(object):
         qpred=self.q_predict.estimateAction()
         qtarget=self.q_target.estimateQGreedy()
         
-#        self.losses = tf.squared_difference(qtarget*vect, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
         self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
         self.loss = tf.reduce_mean(self.losses)
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
-        print("b logits")
 
     def initBuffers(self):
         self.reward_buffer=deque([])
@@ -236,7 +230,6 @@ class DQNAgent(object):
             tf.summary.scalar('stddev', stddev)
             tf.summary.scalar('max', tf.reduce_max(var))
             tf.summary.scalar('sum', tf.reduce_sum(var))
-#            tf.summary.scalar('maxq', tf.argmax(var))
             tf.summary.scalar('min', tf.reduce_min(var))
             tf.summary.histogram('histogram', var)
             tf.summary.histogram('histogram_sum', tf.reduce_sum(var,1))
@@ -305,16 +298,13 @@ class DQNAgent(object):
         self.eps=self.eps_op.eval()
         g=0
         
-        actions=range(self.params['actionsize'])
+        actions=self.params['actions']
 
         if state==None:
-#            a=self.env.action_space.sample()
             a=np.random.choice(actions)
         else:
             if np.random.random()<self.eps:
-#                a=self.env.action_space.sample()
                 a=np.random.choice(actions)
-                    
             else:
                 action_index=self.q_predict.estimateActionGreedy(state)
                 a=action_index
@@ -365,13 +355,12 @@ if __name__ == '__main__':
     else:
         train_dir=sys.argv[1]
     
-    env = gym.make('Breakout-v0')
-    
     params={
+            "Env": 'Pong-v0',
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":500000,
+            "replaymemory":1000000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
@@ -384,6 +373,8 @@ if __name__ == '__main__':
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
+            "use_gym_actions":True,
+            "actions":[0,1,2,3],
             "actionsize": 4,
             "traindir":train_dir,
             "summary_steps":50,
@@ -392,6 +383,14 @@ if __name__ == '__main__':
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":200000
     }
+    env = gym.make(params['Env'])
+#    env = gym.monitoring.Monitor(env, os.path.join(params['traindir'],'monitor'))#, video_callable=lambda x:x%params["framewrite_episodes"]==0)
+    if params["use_gym_actions"]:
+        params["actionsize"]=env.action_space.n
+        params["actions"]=range(env.action_space.n)
+        
+    
+    env.seed(0)
     
     tf.reset_default_graph()
     
@@ -401,6 +400,8 @@ if __name__ == '__main__':
         
         dqa=DQNAgent(sess,env,params)
         
+        env = wrappers.Monitor(env, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%params["framewrite_episodes"]==0)
+        
         c=1
         train=False
         
@@ -408,7 +409,6 @@ if __name__ == '__main__':
         cumRewards=[]
         
         for i in xrange(1,params['episodes']):
-#            print "Starting new Episode (%d)!"%i
             f = env.reset()
             fb_init=FrameBatch(sess)
             
@@ -433,40 +433,24 @@ if __name__ == '__main__':
                     action,g = dqa.takeAction(obs)
                     
                 while fb.addFrame(f) is not True:
-#                    env.render()
                     f, r, d, _ = env.step(action)   
-                    if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
-                        dqa.writeFrame(f,i,t)
                     c+=1
                     rewards.append(r)
                     if d:
                         done=True
-                obsNew=fb.getNextBatch()
-                dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
+                        break
+                
+                if d!=True:
+                    obsNew=fb.getNextBatch()
+                    dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                 
                 loss=-1.
-#                t1_loss=time.clock()
-##                loss=dqa.getLoss()
-#                t2_loss=time.clock()
-#                v2_loss=t2_loss-t1_loss
-#                print "Loss calculation time: %.2f:"%v2_loss
                 if c>=params['replaystartsize']:
-                    t1_train=time.clock()
                     loss=dqa.trainNet()
-                    t2_train=time.clock()
-                    v2_train=t2_train-t1_train
                     train=True
                 
                 curr_xp=len(dqa.frame_buffer)
-                t2=time.clock()
-                dt=t2-t1
-#                print("frame time: {}".format(dt))
-                ts.append(dt)
-                tsa=np.array(ts)
                 if t%40==0:
-                    mean_t=np.mean(tsa)
-                    
-#                    print("\r [Timestep: {} (t: {}) || Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {} || Train {} || Frame: {}]".format(t,mean_t,i,action,g,loss,curr_xp,train,c),end='')
                     print("\r[Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,action,g,loss,curr_xp,c),end='')
                     sys.stdout.flush()
                     
@@ -475,8 +459,6 @@ if __name__ == '__main__':
                 if c%params['targetupdate']==0: #check this
                            dqa.resetTarget()
                 if done:
-                    if i%params['framewrite_episodes']==0:
-                        print(rewards)
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
                     dqa.saveRewards(cumRewards,t)
