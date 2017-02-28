@@ -37,12 +37,12 @@ class FrameBatch(object):
         
         rframe=self._rescaleFrame(frame)
         
-        fframe=np.array(self._getYChannel(rframe)[:,:,-1]).astype(np.float32)/255.
+        fframe=np.array(self._getYChannel(rframe)[:,:,-1]).astype(np.uint8)
         self.frameLst.append(fframe)
         self.cnt+=1
         
         if self.cnt>self.frames:
-            print "Error in preprocessing: more than %d frames in batch!"%self.frames
+            print("Error in preprocessing: more than %d frames in batch!"%self.frames)
             return False
         elif self.cnt==self.frames:
             self.finalBatch=np.array(self.frameLst)
@@ -52,7 +52,7 @@ class FrameBatch(object):
     
     def getNextBatch(self):
         if self.makeGif:
-            print "making gif"
+            print("making gif")
         else:
             del self.frameLst[:]
         return np.transpose(self.finalBatch,(1,2,0))
