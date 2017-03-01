@@ -274,10 +274,16 @@ class DQNAgent(object):
         action_batch=[]
         done_batch=[]
         
+        def c(rew):
+            if self.params["reward_clipping"]:
+                return np.clip(rew,self.params["rew_clip_range"][0],self.params["rew_clip_range"][1])
+            else: 
+                return rew
+        
         for j in idx:
             frame_batch.append(np.array(self.frame_buffer[j]))
             frame2_batch.append(np.array(self.frame2_buffer[j]))
-            reward_batch.append(np.array(self.reward_buffer[j]))
+            reward_batch.append(c(np.array(self.reward_buffer[j])))
             action_batch.append(np.array(self.action_buffer[j]))
             done_batch.append(np.array(self.done_buffer[j]))
         
@@ -381,7 +387,9 @@ if __name__ == '__main__':
             "skip_episodes": 50,
             "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
-            "checkpoint_steps":200000
+            "checkpoint_steps":200000,
+            "reward_clipping":True,
+            "rew_clip_range":[-1,1]
     }
     
     env = gym.make(params['Env'])
