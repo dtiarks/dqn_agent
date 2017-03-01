@@ -383,8 +383,9 @@ if __name__ == '__main__':
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":200000
     }
+    
     env = gym.make(params['Env'])
-#    env = gym.monitoring.Monitor(env, os.path.join(params['traindir'],'monitor'))#, video_callable=lambda x:x%params["framewrite_episodes"]==0)
+    
     if params["use_gym_actions"]:
         params["actionsize"]=env.action_space.n
         params["actions"]=range(env.action_space.n)
@@ -394,8 +395,6 @@ if __name__ == '__main__':
     
     tf.reset_default_graph()
     
-    #add gif suppoert to frame class, add every and at the end of the episode save a gif (or every nth episode) with matplotlib?
-
     with tf.Session() as sess:
         
         dqa=DQNAgent(sess,env,params)
@@ -431,18 +430,22 @@ if __name__ == '__main__':
                     action,g = dqa.takeAction()
                 else:
                     action,g = dqa.takeAction(obs)
-                    
+            
+                r0=0.
                 while fb.addFrame(f) is not True:
                     f, r, d, _ = env.step(action)   
+                    if r>r0:
+                        r0=r
                     c+=1
                     rewards.append(r)
+                    
                     if d:
                         done=True
                         break
                 
                 if d!=True:
                     obsNew=fb.getNextBatch()
-                    dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
+                    dqa.addTransition([obs,action, [r0],obsNew, params["actionsize"]*[float((not done))]])
                 
                 loss=-1.
                 if c>=params['replaystartsize']:
@@ -457,7 +460,8 @@ if __name__ == '__main__':
                 obs=obsNew
                 
                 if c%params['targetupdate']==0: #check this
-                           dqa.resetTarget()
+                    dqa.resetTarget()
+                
                 if done:
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
