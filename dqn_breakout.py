@@ -83,6 +83,15 @@ class QNet(object):
 
         return prediction_index[0]
     
+    def meanQ(self,state_feed):
+        feed=np.expand_dims(state_feed,axis=0)
+        q = self.sess.run(self.action_logits,
+                          feed_dict={self.images_placeholder: feed})
+        
+        qmean=tf.reduce_mean(q)
+
+        return qmean
+    
     def estimateQGreedy(self):
         lg=self.action_logits*self.done_placeholder
         eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=False)
@@ -138,6 +147,8 @@ class DQNAgent(object):
         self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32,trainable=False)
         self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32,trainable=False)
         self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32,trainable=False)
+        self.epoche_reward=tf.Variable(0,name="epoche_reward",dtype=tf.float32,trainable=False)
+        self.epoche_value=tf.Variable(0,name="epoche_value",dtype=tf.float32,trainable=False)
         self.eps=params['initexploration']
         self.q_predict=QNet(sess,"prediction",params)
         self.q_target=QNet(sess,"target",params,train=False)
@@ -215,6 +226,9 @@ class DQNAgent(object):
         with tf.name_scope("episode_stats"):
             tf.summary.scalar('cum_reward', self.last_reward)
             tf.summary.scalar('steps', self.last_steps)
+        with tf.name_scope("epoche_stats"):
+            tf.summary.scalar('epoche_reward', self.epoche_reward)
+            tf.summary.scalar('epoche_vale', self.epoche_vale)
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
         
@@ -268,24 +282,37 @@ class DQNAgent(object):
         self.last_steps.assign(steps).op.run()
         reward_file=os.path.join(self.traindir, 'rewards.dat')
         np.savetxt(reward_file,np.array(data))
+        
+    def epocheStats(self,reward,q):
+        self.epoche_value.assign(q).op.run()
+        self.epoche_reward.assign(reward).op.run()
             
         
-    def takeAction(self,state=None):
+    def takeAction(self,state=None,eps_ext=None):
         self.eps=self.eps_op.eval()
         g=0
         
         actions=range(self.params['actionsize'])
-
-        if state==None:
-            a=np.random.choice(actions)
-        else:
-            if np.random.random()<self.eps:
+        
+        if eps_ext is not None:
+            if np.random.random()<eps_ext:
                 a=np.random.choice(actions)
-                    
             else:
                 action_index=self.q_predict.estimateActionGreedy(state)
                 a=action_index
                 g=1
+                return a,g
+        else:
+            if state==None:
+                a=np.random.choice(actions)
+            else:
+                if np.random.random()<self.eps:
+                    a=np.random.choice(actions)
+                        
+                else:
+                    action_index=self.q_predict.estimateActionGreedy(state)
+                    a=action_index
+                    g=1
             
         return a,g
     
@@ -335,7 +362,10 @@ if __name__ == '__main__':
     env = gym.make('Breakout-v0')
     
     params={
-            "episodes":1000000,
+            "episodes":500,
+            "epoches":1000,
+            "testruns":30,
+            "testeps":0.05,
             "timesteps":10000,#10000,
             "batchsize":32,
             "replaymemory":1000000,
@@ -368,76 +398,122 @@ if __name__ == '__main__':
         
         dqa=DQNAgent(sess,env,params)
         
-        c=1
-        train=False
+        c=0
         
-        #episode loop
-        cumRewards=[]
-        
-        for i in xrange(1,params['episodes']):
-            f = env.reset()
-            fb_init=FrameBatch(sess)
+        for e in xrange(params['epoches']):
+            #episode loop
+            cumRewards=[]
             
-            action,_ = dqa.takeAction()
-            
-            while fb_init.addFrame(f) is not True:
-                f, r, done, _ = env.step(action)
+            for i in xrange(1,params['episodes']):
+                f = env.reset()
+                fb_init=FrameBatch(sess)
                 
-            obs=fb_init.getNextBatch()
-            
-            # time steps
-            
-            rewards=[]
-            ts=[]
-            done=False
-            for t in xrange(params['timesteps']):
-                t1=time.clock()
-                fb=FrameBatch(sess)
-                if c<params['replaystartsize']:
-                    action,g = dqa.takeAction()
-                else:
-                    action,g = dqa.takeAction(obs)
+                action,_ = dqa.takeAction()
+                
+                while fb_init.addFrame(f) is not True:
+                    f, r, done, _ = env.step(action)
                     
-
-                rmax=0.
-                while fb.addFrame(f) is not True:
-#                    env.render()
-                    f, r, d, _ = env.step(action)   
-                    if r>rmax:
-                        rmax=r
-                    if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
-                        dqa.writeFrame(f,i,t)
-                    c+=1
-                    rewards.append(r)
-                    if d:
-                        done=True
-                obsNew=fb.getNextBatch()
-                dqa.addTransition([obs,action, [rmax],obsNew, params["actionsize"]*[float((not done))]])
+                obs=fb_init.getNextBatch()
                 
-                loss=-1.
-                if c>=params['replaystartsize']:
-                    loss=dqa.trainNet()
+                # time steps
                 
-                curr_xp=len(dqa.frame_buffer)
-                if t%40==0:
-                    print("\r[Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,action,g,loss,curr_xp,c),end='')
-                    sys.stdout.flush()
+                rewards=[]
+                ts=[]
+                done=False
+                for t in xrange(params['timesteps']):
+                    t1=time.clock()
+                    fb=FrameBatch(sess)
+                    if c<params['replaystartsize']:
+                        action,g = dqa.takeAction()
+                    else:
+                        action,g = dqa.takeAction(obs)
+                        
+    
+                    rmax=0.
+                    while fb.addFrame(f) is not True:
+    #                    env.render()
+                        f, r, d, _ = env.step(action)   
+                        if r>rmax:
+                            rmax=r
+                        if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
+                            dqa.writeFrame(f,i,t)
+                        c+=1
+                        rewards.append(r)
+                        if d:
+                            done=True
+                    obsNew=fb.getNextBatch()
+                    dqa.addTransition([obs,action, [rmax],obsNew, params["actionsize"]*[float((not done))]])
                     
-                obs=obsNew
+                    loss=-1.
+                    if c>=params['replaystartsize']:
+                        loss=dqa.trainNet()
+                    
+                    curr_xp=len(dqa.frame_buffer)
+                    if t%40==0:
+                        print("\r[Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,action,g,loss,curr_xp,c),end='')
+                        sys.stdout.flush()
+                        
+                    obs=obsNew
+                    
+                    if c%params['targetupdate']==0: #check this
+                               dqa.resetTarget()
+                    if done:
+                        if i%params['framewrite_episodes']==0:
+                            print(np.bincount(rewards))
+                        rSum=np.sum(rewards)
+                        cumRewards.append(rSum)
+                        dqa.saveRewards(cumRewards,t)
+                        break
+            
+            testq=[]
+            testreward=[]                    
+            for s in xrange(params['testruns']):
+                f = env.reset()
+                fb_init=FrameBatch(sess)
                 
-                if c%params['targetupdate']==0: #check this
-                           dqa.resetTarget()
-                if done:
-                    if i%params['framewrite_episodes']==0:
-                        print(np.bincount(rewards))
-                    rSum=np.sum(rewards)
-                    cumRewards.append(rSum)
-                    dqa.saveRewards(cumRewards,t)
-                    break
+                action,_ = dqa.takeAction()
+                
+                while fb_init.addFrame(f) is not True:
+                    f, r, done, _ = env.step(action)
+                    
+                obs=fb_init.getNextBatch()
+                
+                rcum=r
+                qmean=0
+                done=False
+                for t in xrange(params['timesteps']):
+                    fb=FrameBatch(sess)
+                    
+                    action,g = dqa.takeAction(obs,params['testeps'])
+                    q=dqa.q_predict.meanQ(obs)
+                    
+                    rmax=0.
+                    while fb.addFrame(f) is not True:
+    #                    env.render()
+                        f, r, d, _ = env.step(action)   
+                        rcum+=r
+                        if d:
+                            done=True
+                    
+                    obs=fb.getNextBatch()
+                    q=dqa.q_predict.meanQ(obs)
+                    qmean+=q
+                    
+                    if done:
+                        qmean=qmean/s
+                        testq.append(qmean)
+                        testreward.append(rcum)
+                        dqa.epocheStats(rcum,q)
+                        print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,q),end='')
+                        sys.stdout.flush()
+                        break
+            
+            print("Test stats after epoche {}: R: {} ({}) || Q: {} ({})".format(e,np.mean(testq),np.std(testq),np.mean(testreward),np.std(testreward))) 
+                    
                 
     
     env.close()
-    
+#    qmean=self.q_predict.meanQ(state)
     
     
 
