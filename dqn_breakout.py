@@ -362,8 +362,8 @@ if __name__ == '__main__':
     env = gym.make('Breakout-v0')
     
     params={
-            "episodes":500,
-            "epoches":10,
+            "episodes":100,
+            "epoches":1000,
             "testruns":30,
             "testeps":0.05,
             "timesteps":10000,#10000,
