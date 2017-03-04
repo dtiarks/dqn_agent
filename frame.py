@@ -37,7 +37,7 @@ class FrameBatch(object):
         
         rframe=self._rescaleFrame(frame)
         
-        fframe=np.array(self._getYChannel(rframe)[:,:,-1]).astype(np.float32)/255.
+        fframe=np.array(self._getYChannel(rframe)[:,:,-1]).astype(np.uint8)
         self.frameLst.append(fframe)
         self.cnt+=1
         
