@@ -88,7 +88,7 @@ class QNet(object):
         q = self.sess.run(self.action_logits,
                           feed_dict={self.images_placeholder: feed})
         
-        qmean=tf.reduce_mean(q)
+        qmean=np.mean(q)
 
         return qmean
     
