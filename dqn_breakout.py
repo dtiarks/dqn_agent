@@ -467,7 +467,7 @@ if __name__ == '__main__':
             
             testq=[]
             testreward=[]                    
-            for s in xrange(params['testruns']):
+            for s in range(1,params['testruns']):
                 f = env.reset()
                 fb_init=FrameBatch(sess)
                 
