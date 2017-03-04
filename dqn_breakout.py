@@ -282,8 +282,8 @@ class DQNAgent(object):
         done_batch=[]
         
         for j in idx:
-            frame_batch.append(np.array(self.frame_buffer[j]))
-            frame2_batch.append(np.array(self.frame2_buffer[j]))
+            frame_batch.append(np.array(self.frame_buffer[j],dtype=np.float32)/255.)
+            frame2_batch.append(np.array(self.frame2_buffer[j],dtype=np.float32)/255.)
             reward_batch.append(np.array(self.reward_buffer[j]))
             action_batch.append(np.array(self.action_buffer[j]))
             done_batch.append(np.array(self.done_buffer[j]))
@@ -371,7 +371,7 @@ if __name__ == '__main__':
             "episodes":1000000,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":500000,
+            "replaymemory":1000000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
@@ -384,7 +384,7 @@ if __name__ == '__main__':
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
-            "actionsize": 4,
+            "actionsize": 6,
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
@@ -432,9 +432,13 @@ if __name__ == '__main__':
                 else:
                     action,g = dqa.takeAction(obs)
                     
+
+		rmax=0.
                 while fb.addFrame(f) is not True:
 #                    env.render()
                     f, r, d, _ = env.step(action)   
+		    if r>rmax:
+			rmax=r
                     if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
                         dqa.writeFrame(f,i,t)
                     c+=1
@@ -442,7 +446,7 @@ if __name__ == '__main__':
                     if d:
                         done=True
                 obsNew=fb.getNextBatch()
-                dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
+                dqa.addTransition([obs,action, [rmax],obsNew, params["actionsize"]*[float((not done))]])
                 
                 loss=-1.
 #                t1_loss=time.clock()
@@ -476,7 +480,7 @@ if __name__ == '__main__':
                            dqa.resetTarget()
                 if done:
                     if i%params['framewrite_episodes']==0:
-                        print(rewards)
+                        print(np.bincount(rewards))
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
                     dqa.saveRewards(cumRewards,t)
