@@ -362,7 +362,7 @@ if __name__ == '__main__':
     env = gym.make('Breakout-v0')
     
     params={
-            "episodes":100,
+            "episodes":1000,
             "epoches":1000,
             "testruns":30,
             "testeps":0.05,
@@ -507,13 +507,11 @@ if __name__ == '__main__':
                         print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,q),end='')
                         sys.stdout.flush()
                         break
-            print(testreward)
             print("Test stats after epoche {}: R: {} ({}) || Q: {} ({})".format(e,np.mean(testq),np.std(testq),np.mean(testreward),np.std(testreward))) 
                     
                 
     
     env.close()
-#    qmean=self.q_predict.meanQ(state)
     
     
 
