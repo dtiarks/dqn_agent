@@ -228,7 +228,7 @@ class DQNAgent(object):
             tf.summary.scalar('steps', self.last_steps)
         with tf.name_scope("epoche_stats"):
             tf.summary.scalar('epoche_reward', self.epoche_reward)
-            tf.summary.scalar('epoche_vale', self.epoche_vale)
+            tf.summary.scalar('epoche_value', self.epoche_value)
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
         
