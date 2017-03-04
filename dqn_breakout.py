@@ -281,9 +281,15 @@ class DQNAgent(object):
                 return rew
         
         for j in idx:
-            frame_batch.append(np.array(self.frame_buffer[j]))
-            frame2_batch.append(np.array(self.frame2_buffer[j]))
-            reward_batch.append(c(np.array(self.reward_buffer[j])))
+#<<<<<<< HEAD
+#            frame_batch.append(np.array(self.frame_buffer[j]))
+#            frame2_batch.append(np.array(self.frame2_buffer[j]))
+#            reward_batch.append(c(np.array(self.reward_buffer[j])))
+#=======
+            frame_batch.append(np.array(self.frame_buffer[j],dtype=np.float32)/255.)
+            frame2_batch.append(np.array(self.frame2_buffer[j],dtype=np.float32)/255.)
+            reward_batch.append(np.array(self.reward_buffer[j]))
+#>>>>>>> 3cd76e4e9edaf7ac9736b9f15add62202e178a9f
             action_batch.append(np.array(self.action_buffer[j]))
             done_batch.append(np.array(self.done_buffer[j]))
         
@@ -379,16 +385,16 @@ if __name__ == '__main__':
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
-            "use_gym_actions":True,
+            "use_gym_actions":False,
             "actions":[0,1,2,3],
-            "actionsize": 4,
+            "actionsize": 6,
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
             "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":200000,
-            "reward_clipping":True,
+            "reward_clipping":False,
             "rew_clip_range":[-1,1]
     }
     
@@ -438,22 +444,40 @@ if __name__ == '__main__':
                     action,g = dqa.takeAction()
                 else:
                     action,g = dqa.takeAction(obs)
+<<<<<<< HEAD
             
                 r0=0.
+=======
+                    
+
+		rmax=0.
+>>>>>>> 3cd76e4e9edaf7ac9736b9f15add62202e178a9f
                 while fb.addFrame(f) is not True:
                     f, r, d, _ = env.step(action)   
+<<<<<<< HEAD
                     if r>r0:
                         r0=r
+=======
+		    if r>rmax:
+			rmax=r
+                    if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
+                        dqa.writeFrame(f,i,t)
+>>>>>>> 3cd76e4e9edaf7ac9736b9f15add62202e178a9f
                     c+=1
                     rewards.append(r)
                     
                     if d:
                         done=True
+<<<<<<< HEAD
                         break
                 
                 if d!=True:
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,action, [r0],obsNew, params["actionsize"]*[float((not done))]])
+=======
+                obsNew=fb.getNextBatch()
+                dqa.addTransition([obs,action, [rmax],obsNew, params["actionsize"]*[float((not done))]])
+>>>>>>> 3cd76e4e9edaf7ac9736b9f15add62202e178a9f
                 
                 loss=-1.
                 if c>=params['replaystartsize']:
@@ -471,6 +495,11 @@ if __name__ == '__main__':
                     dqa.resetTarget()
                 
                 if done:
+<<<<<<< HEAD
+=======
+                    if i%params['framewrite_episodes']==0:
+                        print(np.bincount(rewards))
+>>>>>>> 3cd76e4e9edaf7ac9736b9f15add62202e178a9f
                     rSum=np.sum(rewards)
                     cumRewards.append(rSum)
                     dqa.saveRewards(cumRewards,t)
