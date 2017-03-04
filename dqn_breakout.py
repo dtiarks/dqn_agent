@@ -363,7 +363,7 @@ if __name__ == '__main__':
     
     params={
             "episodes":500,
-            "epoches":1000,
+            "epoches":10,
             "testruns":30,
             "testeps":0.05,
             "timesteps":10000,#10000,
