@@ -38,34 +38,23 @@ class QNet(object):
         input_layer = self.images_placeholder
 
         with tf.name_scope(self.name):
-#            self.W_conv1 = tf.contrib.layers.conv2d(input_layer, 32, 8, 4, activation_fn=tf.nn.relu)
-#            self.W_conv2 = tf.contrib.layers.conv2d(self.W_conv1, 64, 4, 2, activation_fn=tf.nn.relu)
-#            self.W_conv3 = tf.contrib.layers.conv2d(self.W_conv2, 64, 3, 1, activation_fn=tf.nn.relu)
-#
-##             Fully connected layers
-#            self.W_fc1 = tf.contrib.layers.flatten(self.W_conv3)
-#            self.W_fc2 = tf.contrib.layers.fully_connected(self.W_fc1, 512)
-#            self.action_logits = tf.contrib.layers.fully_connected(self.W_fc2, 6)
             with tf.name_scope('conv1'):
                 # 8x8 conv, 4 inputs, 32 outputs, stride=4
                 self.W_conv1 = self._weight_variable([8, 8, 4, 32],"W_conv1")
                 self.b_conv1 = self._bias_variable([32],"b_conv1")
                 h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4) + self.b_conv1)
-#                h_conv1 = tf.nn.relu(self._conv2d(input_layer, self.W_conv1, 4))
     
             with tf.name_scope('conv2'):
                 # 4x4 conv, 32 inputs, 64 outputs, stride=2
                 self.W_conv2 = self._weight_variable([4, 4, 32, 64],"W_conv2")
                 self.b_conv2 = self._bias_variable([64],"b_conv2")
                 h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2) + self.b_conv2)
-#                h_conv2 = tf.nn.relu(self._conv2d(h_conv1, self.W_conv2, 2))
                 
             with tf.name_scope('conv3'):
                 # 3x3 conv, 64 inputs, 64 outputs, stride=1
                 self.W_conv3 = self._weight_variable([3, 3, 64, 64],"W_conv3")
                 self.b_conv3 = self._bias_variable([64],"b_conv3")
                 h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1) + self.b_conv3)
-#                h_conv3 = tf.nn.relu(self._conv2d(h_conv2, self.W_conv3, 1))
             
             dim=h_conv3.get_shape()
             dims=np.array([d.value for d in dim])
@@ -75,26 +64,19 @@ class QNet(object):
                 self.b_fc1 = self._bias_variable([512],"b_fc1")
     
                 h_conv3_flat = tf.reshape(h_conv3, [-1, reshaped_dim])
-#                h_conv3_flat = tf.contrib.layers.flatten(h_conv3)
                 h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1) + self.b_fc1)
-#                h_fc1 = tf.nn.relu(tf.matmul(h_conv3_flat, self.W_fc1))
-#                h_fc1 = tf.contrib.layers.fully_connected(h_conv3_flat, 512)
                 
             with tf.name_scope('output'):
                 self.W_fc2 = self._weight_variable([512, self.params['actionsize']],"W_fc2")
                 self.b_fc2 = self._bias_variable([self.params['actionsize']],"b_fc2")
     
                 self.action_logits=tf.add(tf.matmul(h_fc1, self.W_fc2), self.b_fc2,"logits")
-#                self.action_logits=tf.matmul(h_fc1, self.W_fc2)
-##                
-###            tf.add_to_collection("logits_%s"%self.name, self.action_logits)
 
         
         self.greedy_actions=tf.argmax(self.action_logits,1)
         return self.action_logits
     
     def estimateActionGreedy(self,state_feed):
-#        self.greedy_actions=tf.argmax(self.action_logits,1)
         feed=np.expand_dims(state_feed,axis=0)
         prediction_index = self.sess.run(self.greedy_actions,
                           feed_dict={self.images_placeholder: feed})
@@ -103,8 +85,6 @@ class QNet(object):
     
     def estimateQGreedy(self):
         lg=self.action_logits*self.done_placeholder
-#        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],self.action_logits),1,keep_dims=True)
-#        eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=True)
         eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=False)
 
         return tf.add(eval_op,self.reward_placeholder) #does this the right thing???
@@ -135,16 +115,9 @@ class QNet(object):
         tf.assign(self.b_fc2,w[9]).op.run()
 
 
-    def _makeFeeds(self):
-        #must return two feeds: greedy target q-values and prediction q-values
-        pass
-    
     def _weight_variable(self,shape,name=None):
         initial = tf.truncated_normal(shape, stddev=0.05)
-#        initial = tf.constant(0.00001, shape=shape)
-#        initial = tf.contrib.layers.xavier_initializer(dtype=tf.float32)
         return tf.Variable(initial,trainable=self.train,name=name)
-#        return tf.get_variable(name, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
 
     def _bias_variable(self,shape,name=None):
         initial = tf.constant(0., shape=shape)
@@ -201,19 +174,15 @@ class DQNAgent(object):
     def initTraining(self):
         self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
                                                    self.params['mingradientmomentum'],1e-6)
-#        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'])
-#        self.optimizer = tf.train.AdamOptimizer(self.params['learningrate'])
         
         self.global_step = tf.Variable(0, trainable=False)
         self.eps_op=tf.train.polynomial_decay(params['initexploration'], self.global_step,
                                           params['finalexpframe'], params['finalexploration'],
                                           power=1)
         
-#        vect,qpred=self.q_predict.estimateAction()
         qpred=self.q_predict.estimateAction()
         qtarget=self.q_target.estimateQGreedy()
         
-#        self.losses = tf.squared_difference(qtarget*vect, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
         self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
         self.loss = tf.reduce_mean(self.losses)
         
@@ -308,11 +277,9 @@ class DQNAgent(object):
         actions=range(self.params['actionsize'])
 
         if state==None:
-#            a=self.env.action_space.sample()
             a=np.random.choice(actions)
         else:
             if np.random.random()<self.eps:
-#                a=self.env.action_space.sample()
                 a=np.random.choice(actions)
                     
             else:
@@ -408,7 +375,6 @@ if __name__ == '__main__':
         cumRewards=[]
         
         for i in xrange(1,params['episodes']):
-#            print "Starting new Episode (%d)!"%i
             f = env.reset()
             fb_init=FrameBatch(sess)
             
@@ -433,12 +399,12 @@ if __name__ == '__main__':
                     action,g = dqa.takeAction(obs)
                     
 
-		rmax=0.
+                rmax=0.
                 while fb.addFrame(f) is not True:
 #                    env.render()
                     f, r, d, _ = env.step(action)   
-		    if r>rmax:
-			rmax=r
+                    if r>rmax:
+                        rmax=r
                     if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
                         dqa.writeFrame(f,i,t)
                     c+=1
@@ -449,28 +415,11 @@ if __name__ == '__main__':
                 dqa.addTransition([obs,action, [rmax],obsNew, params["actionsize"]*[float((not done))]])
                 
                 loss=-1.
-#                t1_loss=time.clock()
-##                loss=dqa.getLoss()
-#                t2_loss=time.clock()
-#                v2_loss=t2_loss-t1_loss
-#                print "Loss calculation time: %.2f:"%v2_loss
                 if c>=params['replaystartsize']:
-                    t1_train=time.clock()
                     loss=dqa.trainNet()
-                    t2_train=time.clock()
-                    v2_train=t2_train-t1_train
-                    train=True
                 
                 curr_xp=len(dqa.frame_buffer)
-                t2=time.clock()
-                dt=t2-t1
-#                print("frame time: {}".format(dt))
-                ts.append(dt)
-                tsa=np.array(ts)
                 if t%40==0:
-                    mean_t=np.mean(tsa)
-                    
-#                    print("\r [Timestep: {} (t: {}) || Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {} || Train {} || Frame: {}]".format(t,mean_t,i,action,g,loss,curr_xp,train,c),end='')
                     print("\r[Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,action,g,loss,curr_xp,c),end='')
                     sys.stdout.flush()
                     
