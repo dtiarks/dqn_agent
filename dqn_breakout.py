@@ -507,7 +507,7 @@ if __name__ == '__main__':
                         print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,q),end='')
                         sys.stdout.flush()
                         break
-            
+            print(testreward)
             print("Test stats after epoche {}: R: {} ({}) || Q: {} ({})".format(e,np.mean(testq),np.std(testq),np.mean(testreward),np.std(testreward))) 
                     
                 
