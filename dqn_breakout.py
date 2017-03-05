@@ -381,7 +381,7 @@ if __name__ == '__main__':
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
-            "actionsize": 6,
+            "actionsize": env.action_space.n,
             "traindir":train_dir,
             "summary_steps":50,
             "skip_episodes": 50,
@@ -391,12 +391,16 @@ if __name__ == '__main__':
     }
     
     tf.reset_default_graph()
+
     
     #add gif suppoert to frame class, add every and at the end of the episode save a gif (or every nth episode) with matplotlib?
 
     with tf.Session() as sess:
         
         dqa=DQNAgent(sess,env,params)
+
+	epoche_name=os.path.join(dqa.traindir,"epoche_stats.tsv")
+	epoche_fd=open(epoche_name,'w+')
         
         c=0
         
@@ -512,11 +516,12 @@ if __name__ == '__main__':
             qepoche_std=np.mean(testq)
             repoche=np.mean(testreward)
             repoche_std=np.std(testreward)
+	    epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
             dqa.epocheStats(repoche,qepoche)
             print("Test stats after epoche {}: R: {} ({}) || Q: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
                     
                 
-    
+    epoche_fd.close()
     env.close()
     
     
