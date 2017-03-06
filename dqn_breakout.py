@@ -171,7 +171,6 @@ class DQNAgent(object):
         
         if params["latest_run"]:
             self.latest_traindir=os.path.join(params['traindir'], "run_%s"%params["latest_run"])
-            # Load a previous checkpoint if we find one
             latest_checkpoint = tf.train.latest_checkpoint(os.path.join(self.latest_traindir,self.params['checkpoint_dir']))
             if latest_checkpoint:
                 print("Loading model checkpoint {}...\n".format(latest_checkpoint))
@@ -179,7 +178,6 @@ class DQNAgent(object):
         
         self.merged = tf.summary.merge_all()
         self.train_writer = tf.summary.FileWriter(self.traindir,sess.graph)
-
                 
         init = tf.global_variables_initializer()
         
