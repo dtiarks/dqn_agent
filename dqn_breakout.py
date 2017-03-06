@@ -20,6 +20,7 @@ import os
 import io
 import sys
 from gym import wrappers
+import argparse
 
 class QNet(object):
     def __init__(self,sess,name,params,train=True):
@@ -362,15 +363,19 @@ class DQNAgent(object):
         self._writeFrame(frame,episode,timestep,self.picdir)
 
 if __name__ == '__main__':      
-    if len(sys.argv) == 1:
-        train_dir="./train_dir"
-    else:
-        train_dir=sys.argv[1]
     
-    env = gym.make('Breakout-v0')
-    evalenv = gym.make('Breakout-v0')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-E","--env", type=str, help="Atari Environment",default='Breakout-v0')
+    parser.add_argument("-d","--dir", type=str, help="Directory where the relevant training info is stored")
+    parser.add_argument("-e","--eval", type=str, help="Evaluation directory. Movies are stored here.")
+    args = parser.parse_args()
+        
+    envname=args.env
+    env = gym.make(envname)
+    evalenv = gym.make(envname)
     
     params={
+            "Env":'Breakout-v0',
             "episodes":1000,
             "epoches":1000,
             "testruns":30,
@@ -391,7 +396,7 @@ if __name__ == '__main__':
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
-            "traindir":train_dir,
+            "traindir":"./train_dir",
             "summary_steps":50,
             "skip_episodes": 50,
             "framewrite_episodes":100,
@@ -400,21 +405,20 @@ if __name__ == '__main__':
             "latest_run":None
     }
     
+    params["Env"]=envname
+    
+    
     tf.reset_default_graph()
     
-    
-
-    
-    #add gif suppoert to frame class, add every and at the end of the episode save a gif (or every nth episode) with matplotlib?
-
     with tf.Session() as sess:
         
         dqa=DQNAgent(sess,env,params)
         
-        evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
-
+        np.save(os.path.join(dqa.traindir,'params_dict.npy'), params)
     	epoche_name=os.path.join(dqa.traindir,"epoche_stats.tsv")
         che_fd=open(epoche_name,'w+')
+        
+        evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
         c=0
         
