@@ -365,7 +365,7 @@ class DQNAgent(object):
 if __name__ == '__main__':      
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("-E","--env", type=str, help="Atari Environment",default='Breakout-v0')
+    parser.add_argument("-E","--env", type=str, help="Atari Environment in Gym, (default: Breakout-v0)",default='Breakout-v0')
     parser.add_argument("-d","--dir", type=str, help="Directory where the relevant training info is stored")
     parser.add_argument("-e","--eval", type=str, help="Evaluation directory. Movies are stored here.")
     args = parser.parse_args()
