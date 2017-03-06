@@ -164,9 +164,18 @@ class DQNAgent(object):
         os.mkdir(self.traindir)
         self.picdir=os.path.join(self.traindir,"pics")
         os.mkdir(self.picdir)
-        os.mkdir(os.path.join(self.traindir,self.params['checkpoint_dir']))
+        checkpoint_dir=os.path.join(self.traindir,self.params['checkpoint_dir'])
+        os.mkdir(checkpoint_dir)
         
         self.saver = tf.train.Saver()
+        
+        if params["latest_run"]:
+            self.latest_traindir=os.path.join(params['traindir'], "run_%s"%params["latest_run"])
+            # Load a previous checkpoint if we find one
+            latest_checkpoint = tf.train.latest_checkpoint(os.path.join(self.latest_traindir,self.params['checkpoint_dir']))
+            if latest_checkpoint:
+                print("Loading model checkpoint {}...\n".format(latest_checkpoint))
+                self.saver.restore(sess, latest_checkpoint)
         
         self.merged = tf.summary.merge_all()
         self.train_writer = tf.summary.FileWriter(self.traindir,sess.graph)
@@ -389,7 +398,8 @@ if __name__ == '__main__':
             "skip_episodes": 50,
             "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
-            "checkpoint_steps":200000
+            "checkpoint_steps":200000,
+            "latest_run":None
     }
     
     tf.reset_default_graph()
@@ -468,8 +478,6 @@ if __name__ == '__main__':
                     if c%params['targetupdate']==0: #check this
                                dqa.resetTarget()
                     if done:
-                        if i%params['framewrite_episodes']==0:
-                            print(np.bincount(rewards))
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
                         dqa.saveRewards(cumRewards,t)
