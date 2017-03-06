@@ -19,6 +19,7 @@ import cv2
 import os
 import io
 import sys
+from gym import wrappers
 
 class QNet(object):
     def __init__(self,sess,name,params,train=True):
@@ -267,7 +268,7 @@ class DQNAgent(object):
         for j in idx:
             frame_batch.append(np.array(self.frame_buffer[j],dtype=np.float32)/255.)
             frame2_batch.append(np.array(self.frame2_buffer[j],dtype=np.float32)/255.)
-            reward_batch.append(np.array(self.reward_buffer[j]))
+            reward_batch.append(np.clip(np.array(self.reward_buffer[j]),-1,1))
             action_batch.append(np.array(self.action_buffer[j]))
             done_batch.append(np.array(self.done_buffer[j]))
         
@@ -360,6 +361,7 @@ if __name__ == '__main__':
         train_dir=sys.argv[1]
     
     env = gym.make('Breakout-v0')
+    evalenv = gym.make('Breakout-v0')
     
     params={
             "episodes":1000,
@@ -391,6 +393,8 @@ if __name__ == '__main__':
     }
     
     tf.reset_default_graph()
+    
+    
 
     
     #add gif suppoert to frame class, add every and at the end of the episode save a gif (or every nth episode) with matplotlib?
@@ -398,9 +402,11 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         
         dqa=DQNAgent(sess,env,params)
+        
+        evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
 
-	epoche_name=os.path.join(dqa.traindir,"epoche_stats.tsv")
-	epoche_fd=open(epoche_name,'w+')
+    	epoche_name=os.path.join(dqa.traindir,"epoche_stats.tsv")
+        che_fd=open(epoche_name,'w+')
         
         c=0
         
@@ -516,7 +522,7 @@ if __name__ == '__main__':
             qepoche_std=np.mean(testq)
             repoche=np.mean(testreward)
             repoche_std=np.std(testreward)
-	    epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
+            che_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
             dqa.epocheStats(repoche,qepoche)
             print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
                     
