@@ -504,7 +504,7 @@ if __name__ == '__main__':
                         testq.append(qmean)
                         testreward.append(rcum)
                         if s%10==0:
-                            print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,q),end='')
+                            print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean),end='')
                         sys.stdout.flush()
                         break
             
@@ -513,7 +513,7 @@ if __name__ == '__main__':
             repoche=np.mean(testreward)
             repoche_std=np.std(testreward)
             dqa.epocheStats(repoche,qepoche)
-            print("Test stats after epoche {}: R: {} ({}) || Q: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
+            print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
                     
                 
     
