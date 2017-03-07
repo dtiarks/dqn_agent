@@ -368,6 +368,7 @@ if __name__ == '__main__':
     parser.add_argument("-E","--env", type=str, help="Atari Environment in Gym, (default: Breakout-v0)",default='Breakout-v0')
     parser.add_argument("-d","--dir", type=str, help="Directory where the relevant training info is stored")
     parser.add_argument("-e","--eval", type=str, help="Evaluation directory. Movies are stored here.")
+    parser.add_argument("-c","--checkpoint",type=str, help="Directory of latest checkpoint.")
     args = parser.parse_args()
         
     envname=args.env
@@ -402,7 +403,7 @@ if __name__ == '__main__':
             "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":200000,
-            "latest_run":None
+            "latest_run":args.checkpoint
     }
     
     params["Env"]=envname
