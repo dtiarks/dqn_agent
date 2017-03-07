@@ -452,7 +452,7 @@ if __name__ == '__main__':
                         action,g = dqa.takeAction(obs)
                         
     
-                    rmax=0.
+                    rmax=-1000.
                     while fb.addFrame(f) is not True:
     #                    env.render()
                         f, r, d, _ = env.step(action)   
