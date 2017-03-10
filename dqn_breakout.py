@@ -145,6 +145,7 @@ class DQNAgent(object):
         self.cnt=0
         self.env=env
         self.sess=sess
+        self.current_loss=0
         
         self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32,trainable=False)
         self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32,trainable=False)
@@ -334,18 +335,21 @@ class DQNAgent(object):
         #Needs frameskipping: every C steps reset target weights!
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
         
-        l,_,summary=self.sess.run([self.loss,self.train,self.merged],feed_dict=xp_feed_dict)
+        self.sess.run([self.train],feed_dict=xp_feed_dict)
         
         
         if self.global_step.eval()%self.params['summary_steps']==0:
+            l,summary=self.sess.run([self.loss,self.merged])
+            self.current_loss=l
             self.train_writer.add_summary(summary, self.global_step.eval())
         
         if self.global_step.eval()%self.params['checkpoint_steps']==0:
             checkpoint_file = os.path.join(self.traindir,self.params['checkpoint_dir'], 'checkpoint')
             name=self.saver.save(self.sess, checkpoint_file, global_step=self.global_step.eval())
             print("Saving checkpoint: %s"%name)
+            
         
-        return l
+        return self.current_loss
         
     def resetTarget(self):
         #reset target weights every C steps; put in main loop
@@ -458,8 +462,6 @@ if __name__ == '__main__':
                         f, r, d, _ = env.step(action)   
                         if r>rmax:
                             rmax=r
-                        if (i>params['skip_episodes']) and (i%params['framewrite_episodes']==0):
-                            dqa.writeFrame(f,i,t)
                         c+=1
                         rewards.append(r)
                         if d:
@@ -489,13 +491,13 @@ if __name__ == '__main__':
             testq=[]
             testreward=[]                    
             for s in range(1,params['testruns']):
-                f = env.reset()
+                f = evalenv.reset()
                 fb_init=FrameBatch(sess)
                 
                 action,_ = dqa.takeAction()
                 
                 while fb_init.addFrame(f) is not True:
-                    f, r, done, _ = env.step(action)
+                    f, r, done, _ = evalenv.step(action)
                     
                 obs=fb_init.getNextBatch()
                 
@@ -511,7 +513,7 @@ if __name__ == '__main__':
                     rmax=0.
                     while fb.addFrame(f) is not True:
     #                    env.render()
-                        f, r, d, _ = env.step(action)   
+                        f, r, d, _ = evalenv.step(action)   
                         rcum+=r
                         if d:
                             done=True
@@ -521,7 +523,7 @@ if __name__ == '__main__':
                     qmean+=q
                     
                     if done:
-                        qmean=qmean/s
+                        qmean=np.true_devide(qmean,s)
                         testq.append(qmean)
                         testreward.append(rcum)
                         if s%10==0:
@@ -530,7 +532,7 @@ if __name__ == '__main__':
                         break
             
             qepoche=np.mean(testq)
-            qepoche_std=np.mean(testq)
+            qepoche_std=np.std(testq)
             repoche=np.mean(testreward)
             repoche_std=np.std(testreward)
             che_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
