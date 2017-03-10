@@ -467,7 +467,7 @@ if __name__ == '__main__':
                         if d:
                             done=True
                     obsNew=fb.getNextBatch()
-                    dqa.addTransition([obs,action, [rmax],obsNew, params["actionsize"]*[float((not done))]])
+                    dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
