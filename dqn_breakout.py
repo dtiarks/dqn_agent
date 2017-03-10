@@ -339,7 +339,7 @@ class DQNAgent(object):
         
         
         if self.global_step.eval()%self.params['summary_steps']==0:
-            l,summary=self.sess.run([self.loss,self.merged])
+            l,summary=self.sess.run([self.loss,self.merged],feed_dict=xp_feed_dict)
             self.current_loss=l
             self.train_writer.add_summary(summary, self.global_step.eval())
         
