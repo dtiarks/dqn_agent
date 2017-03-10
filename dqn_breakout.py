@@ -529,7 +529,7 @@ if __name__ == '__main__':
                     	qmean+=q
                     
                     if done:
-                        qmean=np.true_devide(qmean,s)
+                        qmean=np.true_divide(qmean,s)
                         testq.append(qmean)
                         testreward.append(rcum)
                         if s%10==0:
