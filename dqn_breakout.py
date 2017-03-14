@@ -481,7 +481,7 @@ if __name__ == '__main__':
                         t2=time.clock()
                         if t>0:
                             rate=t/(t2-t1)
-                        print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
+                            print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
                         sys.stdout.flush()
                         
                     obs=obsNew
