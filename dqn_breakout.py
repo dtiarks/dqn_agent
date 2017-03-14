@@ -423,8 +423,8 @@ if __name__ == '__main__':
         dqa=DQNAgent(sess,env,params)
         
         np.save(os.path.join(dqa.traindir,'params_dict.npy'), params)
-    	epoche_name=os.path.join(dqa.traindir,"epoche_stats.tsv")
-        che_fd=open(epoche_name,'w+')
+        epoche_name=os.path.join(dqa.traindir,"epoche_stats.tsv")
+        epoche_fd=open(epoche_name,'w+')
         
         evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
@@ -461,16 +461,16 @@ if __name__ == '__main__':
     
                     while fb.addFrame(f) is not True:
     #                    env.render()
-			if done:
-				break
+#                        if done:
+#                            break
                         f, r, d, _ = env.step(action)   
                         c+=1
                         rewards.append(r)
                         if d:
                             done=True
-		    if not done:
-                    	obsNew=fb.getNextBatch()
-                    	dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
+#                            if not done:
+                        obsNew=fb.getNextBatch()
+                        dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
@@ -479,7 +479,8 @@ if __name__ == '__main__':
                     curr_xp=len(dqa.frame_buffer)
                     if t%40==0:
                         t2=time.clock()
-                        rate=t/(t2-t1)
+                        if t>0:
+                            rate=t/(t2-t1)
                         print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
                         sys.stdout.flush()
                         
@@ -518,17 +519,17 @@ if __name__ == '__main__':
                     rmax=0.
                     while fb.addFrame(f) is not True:
     #                    env.render()
-		        if done:
-				break
+                        if done:
+                            break
                         f, r, d, _ = evalenv.step(action)   
                         rcum+=r
                         if d:
                             done=True
                     
-		    if not done:
-                    	obs=fb.getNextBatch()
-                    	q=dqa.q_predict.meanQ(obs)
-                    	qmean+=q
+                    if not done:
+                        obs=fb.getNextBatch()
+                        q=dqa.q_predict.meanQ(obs)
+                        qmean+=q
                     
                     if done:
                         qmean=np.true_divide(qmean,s)
@@ -543,13 +544,13 @@ if __name__ == '__main__':
             qepoche_std=np.std(testq)
             repoche=np.mean(testreward)
             repoche_std=np.std(testreward)
-            che_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
+            epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
             dqa.epocheStats(repoche,qepoche)
             print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
                     
                 
-    epoche_fd.close()
-    env.close()
+        epoche_fd.close()
+        env.close()
     
     
 
