@@ -101,14 +101,14 @@ class QNet(object):
         return tf.add(eval_op,self.reward_placeholder) #does this the right thing???
     
     def estimateAction(self):
-#        oh=tf.one_hot(self.action_placeholder,self.params['actionsize'])
-#        out=self.action_logits*oh
+        oh=tf.one_hot(self.action_placeholder,self.params['actionsize'])
+        out=tf.reduce_mean(self.action_logits*oh)
         
-        gather_indices = tf.range(self.params['batchsize']) * tf.shape(self.action_logits)[1] + self.action_placeholder
-        self.action_predictions = tf.gather(tf.reshape(self.action_logits, [-1]), gather_indices)
+#        gather_indices = tf.range(self.params['batchsize']) * tf.shape(self.action_logits)[1] + self.action_placeholder
+#        self.action_predictions = tf.gather(tf.reshape(self.action_logits, [-1]), gather_indices)
         
-#        return oh,out
-        return self.action_predictions
+        return out
+#        return self.action_predictions
     
     def getWeights(self):
         return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
@@ -127,7 +127,7 @@ class QNet(object):
 
 
     def _weight_variable(self,shape,name=None):
-        initial = tf.truncated_normal(shape, stddev=0.05)
+        initial = tf.truncated_normal(shape, stddev=0.02)
         return tf.Variable(initial,trainable=self.train,name=name)
 
     def _bias_variable(self,shape,name=None):
@@ -135,7 +135,7 @@ class QNet(object):
         return tf.Variable(initial,trainable=self.train,name=name)
 
     def _conv2d(self,x, W, s):
-        return tf.nn.conv2d(x, W, strides=[1, s, s, 1], padding='SAME')
+        return tf.nn.conv2d(x, W, strides=[1, s, s, 1], padding='VALID')
 
 class DQNAgent(object):
     
@@ -193,8 +193,10 @@ class DQNAgent(object):
         self.train_writer.close()
         
     def initTraining(self):
-        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
-                                                   self.params['mingradientmomentum'],1e-6)
+#        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
+#                                                   self.params['mingradientmomentum'],1e-6)
+        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=0.95, epsilon=0.01)
+        
         
         self.global_step = tf.Variable(0, trainable=False)
         self.eps_op=tf.train.polynomial_decay(params['initexploration'], self.global_step,
@@ -241,6 +243,7 @@ class DQNAgent(object):
             tf.summary.scalar('epoche_value', self.epoche_value)
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
+            tf.summary.histogram('histogram',tf.to_float(self.q_predict.greedy_actions))
         
         with tf.name_scope("target_action"):
             self.variable_summaries(self.q_target.action_logits)
@@ -447,8 +450,8 @@ if __name__ == '__main__':
                 rewards=[]
                 ts=[]
                 done=False
+                t1=time.clock()
                 for t in xrange(params['timesteps']):
-                    t1=time.clock()
                     fb=FrameBatch(sess)
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
@@ -456,12 +459,9 @@ if __name__ == '__main__':
                         action,g = dqa.takeAction(obs)
                         
     
-                    rmax=-1000.
                     while fb.addFrame(f) is not True:
     #                    env.render()
                         f, r, d, _ = env.step(action)   
-                        if r>rmax:
-                            rmax=r
                         c+=1
                         rewards.append(r)
                         if d:
@@ -475,7 +475,9 @@ if __name__ == '__main__':
                     
                     curr_xp=len(dqa.frame_buffer)
                     if t%40==0:
-                        print("\r[Epis: {} || Action: {} ({}) || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,action,g,loss,curr_xp,c),end='')
+                        t2=time.clock()
+                        rate=t/(t2-t1)
+                        print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
                         sys.stdout.flush()
                         
                     obs=obsNew
