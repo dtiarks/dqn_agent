@@ -461,13 +461,16 @@ if __name__ == '__main__':
     
                     while fb.addFrame(f) is not True:
     #                    env.render()
+			if done:
+				break
                         f, r, d, _ = env.step(action)   
                         c+=1
                         rewards.append(r)
                         if d:
                             done=True
-                    obsNew=fb.getNextBatch()
-                    dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
+		    if not done:
+                    	obsNew=fb.getNextBatch()
+                    	dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
@@ -515,17 +518,20 @@ if __name__ == '__main__':
                     rmax=0.
                     while fb.addFrame(f) is not True:
     #                    env.render()
+		        if done:
+				break
                         f, r, d, _ = evalenv.step(action)   
                         rcum+=r
                         if d:
                             done=True
                     
-                    obs=fb.getNextBatch()
-                    q=dqa.q_predict.meanQ(obs)
-                    qmean+=q
+		    if not done:
+                    	obs=fb.getNextBatch()
+                    	q=dqa.q_predict.meanQ(obs)
+                    	qmean+=q
                     
                     if done:
-                        qmean=np.true_devide(qmean,s)
+                        qmean=np.true_divide(qmean,s)
                         testq.append(qmean)
                         testreward.append(rcum)
                         if s%10==0:
