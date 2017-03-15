@@ -435,12 +435,11 @@ if __name__ == '__main__':
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
-                        t1=time.clock()  
-                        action,g = dqa.takeAction(obs)
-                        t2=time.clock()
-                        print("Time :{}".format(t2-t1))
                         
-    
+                        action,g = dqa.takeAction(obs)
+                        
+                        
+                    t1=time.clock()  
                     while fb.addFrame(f) is not True:
     #                    env.render()
 #                        if done:
@@ -451,6 +450,9 @@ if __name__ == '__main__':
                         if d:
                             done=True
 #                            if not done:
+                    t2=time.clock()
+                    print("Time :{}".format(t2-t1))
+                    
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,np.array([action]), np.array([r]),obsNew, np.array(params['actionsize']*[int((not done))])])
                     
