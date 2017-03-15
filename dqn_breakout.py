@@ -315,10 +315,10 @@ class DQNAgent(object):
         
     def trainNet(self):
         #Needs frameskipping: every C steps reset target weights!
-        t1=time.clock()
+#        t1=time.clock()
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
-        t2=time.clock()
-        print("Time :{}".format(t2-t1))
+#        t2=time.clock()
+#        print("Time :{}".format(t2-t1))
         
         self.sess.run([self.train],feed_dict=xp_feed_dict)
         
