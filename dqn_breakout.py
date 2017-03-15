@@ -31,7 +31,7 @@ class QNet(object):
         self.input_shape=[None ,params['framesize'],params['framesize'],params['frames']] #add to hyperparamters
         self.images_placeholder = tf.placeholder(tf.float32,shape=self.input_shape)
         self.target_placeholder = tf.placeholder(tf.int32,shape=[None,params['actionsize']])
-        self.reward_placeholder = tf.placeholder(tf.float32,shape=[None,1])
+        self.reward_placeholder = tf.placeholder(tf.float32,shape=[None])
         self.action_placeholder = tf.placeholder(tf.int32,shape=[None])
         self.done_placeholder = tf.placeholder(tf.float32,shape=[None,params['actionsize']])
         self.train=train
@@ -96,7 +96,7 @@ class QNet(object):
         return qmean
     
     def estimateQGreedy(self):
-        lg=self.action_logits*self.done_placeholder
+        lg=self.done_placeholder*self.action_logits
         eval_op=tf.reduce_max(tf.scalar_mul(self.params['discount'],lg),1,keep_dims=False)
 
         return tf.add(eval_op,self.reward_placeholder) #does this the right thing???
@@ -161,7 +161,7 @@ class DQNAgent(object):
         self.initTraining()
         self.initSummaries()
         
-        rpm=RPM(100)
+        self.rpm=RPM(params['replaymemory'])
         
 #        os.mkdir(self.params['traindir'])
         subdir=datetime.datetime.now().strftime('%d%m%y_%H%M%S')
@@ -258,40 +258,16 @@ class DQNAgent(object):
             tf.summary.scalar('eps_val',self.eps_op)
         
     def addTransition(self,t):
-        self.frame_buffer.appendleft(t[0])
-        self.action_buffer.appendleft(t[1])
-        self.reward_buffer.appendleft(t[2])
-        self.frame2_buffer.appendleft(t[3])
-        self.done_buffer.appendleft(t[4])
-        
-        
-        if len(self.frame_buffer) > self.xpsize:
-            self.frame_buffer.pop()
-            self.frame2_buffer.pop()
-            self.action_buffer.pop()
-            self.reward_buffer.pop()
-            self.done_buffer.pop()
+        self.rpm.addTransition(t)
             
     def _sampleTransitionBatch(self,batchsize=32):
-        idx=np.random.randint(0,len(self.frame_buffer),batchsize)
-        frame_batch=[]
-        frame2_batch=[]
-        reward_batch=[]
-        action_batch=[]
-        done_batch=[]
+        sample=self.rpm.sampleTransition()
         
-        for j in idx:
-            frame_batch.append(np.array(self.frame_buffer[j],dtype=np.float32)/255.)
-            frame2_batch.append(np.array(self.frame2_buffer[j],dtype=np.float32)/255.)
-            reward_batch.append(np.clip(np.array(self.reward_buffer[j]),-1,1))
-            action_batch.append(np.array(self.action_buffer[j]))
-            done_batch.append(np.array(self.done_buffer[j]))
-        
-        return {self.q_predict.images_placeholder: frame_batch,
-                self.q_predict.action_placeholder: action_batch,
-                self.q_target.reward_placeholder: reward_batch,
-                self.q_target.images_placeholder: frame2_batch,
-                self.q_target.done_placeholder: done_batch}
+        return {self.q_predict.images_placeholder: sample[0],
+                self.q_predict.action_placeholder: sample[1],
+                self.q_target.reward_placeholder: np.clip(sample[2],-1,1),
+                self.q_target.images_placeholder: sample[3],
+                self.q_target.done_placeholder: sample[4]}
         
     def saveRewards(self,data,steps=0):
         self.last_reward.assign(data[-1]).op.run()
@@ -476,7 +452,7 @@ if __name__ == '__main__':
                             done=True
 #                            if not done:
                     obsNew=fb.getNextBatch()
-                    dqa.addTransition([obs,action, [r],obsNew, params["actionsize"]*[float((not done))]])
+                    dqa.addTransition([obs,np.array([action]), np.array([r]),obsNew, np.array(params['actionsize']*[int((not done))])])
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
