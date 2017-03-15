@@ -102,7 +102,7 @@ class QNet(object):
     
     def estimateAction(self):
         oh=tf.one_hot(self.action_placeholder,self.params['actionsize'])
-        out=tf.reduce_mean(self.action_logits*oh,1)
+        out=tf.reduce_sum(self.action_logits*oh,1)
         
 #        gather_indices = tf.range(self.params['batchsize']) * tf.shape(self.action_logits)[1] + self.action_placeholder
 #        self.action_predictions = tf.gather(tf.reshape(self.action_logits, [-1]), gather_indices)
