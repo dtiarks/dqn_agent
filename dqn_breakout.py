@@ -397,7 +397,7 @@ if __name__ == '__main__':
     
     tf.reset_default_graph()
     
-    with tf.Session() as sess:
+    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         
         dqa=DQNAgent(sess,env,params)
         
@@ -431,7 +431,6 @@ if __name__ == '__main__':
                 done=False
                 t1=time.clock()
                 for t in xrange(params['timesteps']):
-                    t1_train=time.clock()
                     fb=FrameBatch(sess)
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
@@ -449,16 +448,12 @@ if __name__ == '__main__':
                         rewards.append(r)
                         if d:
                             done=True
-#                            if not done:
-                    t2_train=time.clock()
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,np.array([action]), np.array([r]),obsNew, np.array(params['actionsize']*[int((not done))])])
                     
                     
-                    
                     loss=-1.
                     if c>=params['replaystartsize']:
-                        print("T: {}".format(t2_train-t1_train))
                         loss=dqa.trainNet()
                     
                     curr_xp=len(dqa.frame_buffer)
@@ -473,6 +468,7 @@ if __name__ == '__main__':
                     
                     if c%params['targetupdate']==0: #check this
                         dqa.resetTarget()
+                        
                     
                     if done: 
                         rSum=np.sum(rewards)
