@@ -21,6 +21,7 @@ import io
 import sys
 from gym import wrappers
 import argparse
+from memory import ReplayMemory as RPM
 
 class QNet(object):
     def __init__(self,sess,name,params,train=True):
@@ -159,6 +160,8 @@ class DQNAgent(object):
         self.initBuffers()
         self.initTraining()
         self.initSummaries()
+        
+        rpm=RPM(100)
         
 #        os.mkdir(self.params['traindir'])
         subdir=datetime.datetime.now().strftime('%d%m%y_%H%M%S')
