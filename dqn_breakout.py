@@ -449,16 +449,16 @@ if __name__ == '__main__':
                         if d:
                             done=True
 #                            if not done:
-                    
+                    t1_train=time.clock()
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,np.array([action]), np.array([r]),obsNew, np.array(params['actionsize']*[int((not done))])])
+                    t2_train=time.clock()
+                    
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
-                        t1_train=time.clock()
+                        print("T: {}".format(t2_train-t1_train))
                         loss=dqa.trainNet()
-                        t2_train=time.clock()
-                        print("Time per episode: {} ".format((t2_train-t1_train)))
                     
                     curr_xp=len(dqa.frame_buffer)
                     if t%40==0:
