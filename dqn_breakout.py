@@ -455,7 +455,10 @@ if __name__ == '__main__':
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
+                        t1_train=time.clock()
                         loss=dqa.trainNet()
+                        t2_train=time.clock()
+                        print("Time per episode: {} ".format((t2_train-t1_train)))
                     
                     curr_xp=len(dqa.frame_buffer)
                     if t%40==0:
@@ -468,14 +471,16 @@ if __name__ == '__main__':
                     obs=obsNew
                     
                     if c%params['targetupdate']==0: #check this
-                               dqa.resetTarget()
-                    if done:
+                        dqa.resetTarget()
+                    
+                    if done: 
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
                         dqa.saveRewards(cumRewards,t)
                         break
-                t2_ep=time.clock()
-                print("Time per episode: {} || Rate {}".format((t2_ep-t1),t/(t2_ep-t1)))
+                    
+                
+                
             
             testq=[]
             testreward=[]                    
