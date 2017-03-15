@@ -103,7 +103,7 @@ class QNet(object):
     
     def estimateAction(self):
         oh=tf.one_hot(self.action_placeholder,self.params['actionsize'])
-        out=tf.reduce_sum(self.action_logits*oh,1)
+        out=tf.reduce_sum(self.action_logits*oh,1,keep_dims=False)
         
 #        gather_indices = tf.range(self.params['batchsize']) * tf.shape(self.action_logits)[1] + self.action_placeholder
 #        self.action_predictions = tf.gather(tf.reshape(self.action_logits, [-1]), gather_indices)
@@ -210,7 +210,8 @@ class DQNAgent(object):
         qtarget=self.q_target.estimateQGreedy()
         
         self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
-        self.loss = tf.reduce_mean(self.losses)
+#        self.losses=qtarget-qpred
+        self.loss = tf.reduce_sum(self.losses)
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
         print("b logits")
@@ -369,7 +370,7 @@ if __name__ == '__main__':
             "testeps":0.05,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":1000000,
+            "replaymemory":100000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
@@ -379,7 +380,7 @@ if __name__ == '__main__':
             "initexploration":1.0,
             "finalexploration":0.1,
             "finalexpframe":1000000,
-            "replaystartsize":50000,
+            "replaystartsize":5000,
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
