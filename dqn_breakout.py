@@ -198,8 +198,7 @@ class DQNAgent(object):
     def initTraining(self):
 #        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
 #                                                   self.params['mingradientmomentum'],1e-6)
-        #self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=0.95, epsilon=0.01)
-        self.optimizer = tf.train.AdamOptimizer(self.params['learningrate'])
+        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=0.95, epsilon=0.01)
         
         
         self.global_step = tf.Variable(0, trainable=False)
@@ -211,11 +210,9 @@ class DQNAgent(object):
         qtarget=self.q_target.estimateQGreedy()
         
         self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
-#        self.losses=qtarget-qpred
         self.loss = tf.reduce_mean(self.losses)
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
-        print("b logits")
 
     def initBuffers(self):
         self.reward_buffer=deque([])
@@ -371,7 +368,7 @@ if __name__ == '__main__':
             "testeps":0.05,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":100000,
+            "replaymemory":1000000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
@@ -381,7 +378,7 @@ if __name__ == '__main__':
             "initexploration":1.0,
             "finalexploration":0.1,
             "finalexpframe":1000000,
-            "replaystartsize":5000,
+            "replaystartsize":50000,
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
@@ -495,7 +492,7 @@ if __name__ == '__main__':
                 obs=fb_init.getNextBatch()
                 
                 rcum=r
-                qmean=0
+                qmean=[]
                 done=False
                 for t in xrange(params['timesteps']):
                     fb=FrameBatch(sess)
@@ -516,11 +513,10 @@ if __name__ == '__main__':
                     if not done:
                         obs=fb.getNextBatch()
                         q=dqa.q_predict.meanQ(obs)
-                        qmean+=q
+                        qmean.append(q)
                     
                     if done:
-                        qmean=np.true_divide(qmean,s)
-                        testq.append(qmean)
+                        testq.append(np.mean(qmean))
                         testreward.append(rcum)
                         if s%10==0:
                             print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean),end='')
