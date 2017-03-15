@@ -198,7 +198,8 @@ class DQNAgent(object):
     def initTraining(self):
 #        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],self.params['gradientmomentum'],
 #                                                   self.params['mingradientmomentum'],1e-6)
-        self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=0.95, epsilon=0.01)
+        #self.optimizer = tf.train.RMSPropOptimizer(self.params['learningrate'],momentum=0.95, epsilon=0.01)
+        self.optimizer = tf.train.AdamOptimizer(self.params['learningrate'])
         
         
         self.global_step = tf.Variable(0, trainable=False)
