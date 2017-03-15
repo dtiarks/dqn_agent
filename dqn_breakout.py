@@ -263,10 +263,10 @@ class DQNAgent(object):
     def _sampleTransitionBatch(self,batchsize=32):
         sample=self.rpm.sampleTransition()
         
-        return {self.q_predict.images_placeholder: sample[0],
+        return {self.q_predict.images_placeholder: np.array(sample[0],dtype=np.float32)/255.,
                 self.q_predict.action_placeholder: sample[1],
                 self.q_target.reward_placeholder: np.clip(sample[2],-1,1),
-                self.q_target.images_placeholder: sample[3],
+                self.q_target.images_placeholder: np.array(sample[3],dtype=np.float32)/255.,
                 self.q_target.done_placeholder: sample[4]}
         
     def saveRewards(self,data,steps=0):
