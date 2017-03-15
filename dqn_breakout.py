@@ -211,7 +211,7 @@ class DQNAgent(object):
         
         self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
 #        self.losses=qtarget-qpred
-        self.loss = tf.reduce_sum(self.losses)
+        self.loss = tf.reduce_mean(self.losses)
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
         print("b logits")
