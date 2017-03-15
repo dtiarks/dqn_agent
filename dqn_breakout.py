@@ -397,7 +397,7 @@ if __name__ == '__main__':
     
     tf.reset_default_graph()
     
-    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+    with tf.Session() as sess:
         
         dqa=DQNAgent(sess,env,params)
         
