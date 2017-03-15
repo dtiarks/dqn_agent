@@ -318,12 +318,7 @@ class DQNAgent(object):
 
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
 
-
-        t1=time.clock()        
         self.sess.run([self.train],feed_dict=xp_feed_dict)
-        t2=time.clock()
-        print("Time :{}".format(t2-t1))
-        
         
         if self.global_step.eval()%self.params['summary_steps']==0:
             l,summary=self.sess.run([self.loss,self.merged],feed_dict=xp_feed_dict)
@@ -440,7 +435,10 @@ if __name__ == '__main__':
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
+                        t1=time.clock()  
                         action,g = dqa.takeAction(obs)
+                        t2=time.clock()
+                        print("Time :{}".format(t2-t1))
                         
     
                     while fb.addFrame(f) is not True:
