@@ -431,6 +431,7 @@ if __name__ == '__main__':
                 done=False
                 t1=time.clock()
                 for t in xrange(params['timesteps']):
+                    t1_train=time.clock()
                     fb=FrameBatch(sess)
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
@@ -449,10 +450,10 @@ if __name__ == '__main__':
                         if d:
                             done=True
 #                            if not done:
-                    t1_train=time.clock()
+                    t2_train=time.clock()
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,np.array([action]), np.array([r]),obsNew, np.array(params['actionsize']*[int((not done))])])
-                    t2_train=time.clock()
+                    
                     
                     
                     loss=-1.
