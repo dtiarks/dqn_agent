@@ -474,6 +474,8 @@ if __name__ == '__main__':
                         cumRewards.append(rSum)
                         dqa.saveRewards(cumRewards,t)
                         break
+                t2_ep=time.clock()
+                print("Time per episode: {} || Rate {}".format((t2_ep-t1),t/(t2_ep-t1)))
             
             testq=[]
             testreward=[]                    
