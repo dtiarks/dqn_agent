@@ -442,7 +442,7 @@ if __name__ == '__main__':
                 for t in xrange(params['timesteps']):
                     done=False
                     
-                    t1=time.clock()
+                    t1Frame=time.clock()
                     
                     fb=FrameBatch(sess)
                     if c<params['replaystartsize']:
@@ -466,7 +466,7 @@ if __name__ == '__main__':
                     
                     t2Frame=time.clock()
 #                    print("\r[Time: {}]".format((t2-t1),end=''))
-                    dtFrame=(t2Frame-t1)
+                    dtFrame=(t2Frame-t1Frame)
                     sys.stdout.flush()
                     
                     loss=-1.
