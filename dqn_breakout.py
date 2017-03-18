@@ -17,11 +17,11 @@ from collections import deque
 import datetime
 import cv2
 import os
-import io
 import sys
 from gym import wrappers
 import argparse
 from memory import ReplayMemory as RPM
+from tensorflow.python.client import timeline
 
 class QNet(object):
     def __init__(self,sess,name,params,train=True):
@@ -148,6 +148,9 @@ class DQNAgent(object):
         self.sess=sess
         self.current_loss=0
         
+        self.run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        self.run_metadata = tf.RunMetadata()
+        
         self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32,trainable=False)
         self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32,trainable=False)
         self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32,trainable=False)
@@ -189,8 +192,6 @@ class DQNAgent(object):
         sess.run(init)
         self.q_target.updateWeights(self.q_predict.getWeights())
 #        sess.graph.finalize()
-        #Summaries: Max Q (from action request) for episode (need reset func called after each episode), timesteps per episode
-        #avg q per episode (laser 20 or so), cumm reward per episode, avg last 20 reward per episode, loss,eps,gifs?
     
     def __del__(self):
         self.train_writer.close()
@@ -266,7 +267,7 @@ class DQNAgent(object):
                 self.q_predict.action_placeholder: sample[1],
                 self.q_target.reward_placeholder: np.clip(sample[2],-1,1),
                 self.q_target.images_placeholder: np.array(sample[3],dtype=np.float32)/255.,
-                self.q_target.done_placeholder: sample[4]}
+                self.q_target.done_placeholder: np.array(sample[4],dtype=np.float32)}
         
     def saveRewards(self,data,steps=0):
         self.last_reward.assign(data[-1]).op.run()
@@ -317,7 +318,13 @@ class DQNAgent(object):
 
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
 
-        self.sess.run([self.train],feed_dict=xp_feed_dict)
+        self.sess.run([self.train],feed_dict=xp_feed_dict, options=self.run_options, run_metadata=self.run_metadata)
+        
+        # Create the Timeline object, and write it to a json
+        tl = timeline.Timeline(self.run_metadata.step_stats)
+        ctf = tl.generate_chrome_trace_format()
+        with open('timeline.json', 'w') as f:
+            f.write(ctf)
         
         if self.global_step.eval()%self.params['summary_steps']==0:
             l,summary=self.sess.run([self.loss,self.merged],feed_dict=xp_feed_dict)
@@ -368,7 +375,7 @@ if __name__ == '__main__':
             "testeps":0.05,
             "timesteps":10000,#10000,
             "batchsize":32,
-            "replaymemory":1000000,
+            "replaymemory":10000,
             "targetupdate":10000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
@@ -378,7 +385,7 @@ if __name__ == '__main__':
             "initexploration":1.0,
             "finalexploration":0.1,
             "finalexpframe":1000000,
-            "replaystartsize":50000,
+            "replaystartsize":500,
             "framesize":84,
             "frames":4,
             "actionsize": env.action_space.n,
@@ -448,7 +455,7 @@ if __name__ == '__main__':
                         if d:
                             done=True
                     obsNew=fb.getNextBatch()
-                    dqa.addTransition([obs,np.array([action]), np.array([r]),obsNew, np.array(params['actionsize']*[int((not done))])])
+                    dqa.addTransition([obs,action, r,obsNew, np.array(params['actionsize']*[(not done)])])
                     
                     
                     loss=-1.
