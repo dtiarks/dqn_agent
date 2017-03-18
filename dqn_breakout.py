@@ -427,7 +427,7 @@ if __name__ == '__main__':
         evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
         c=0
-        
+        t1=time.clock()
         for e in xrange(params['epoches']):
             #episode loop
             cumRewards=[]
@@ -446,12 +446,10 @@ if __name__ == '__main__':
                     fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
                     obs[:,:,i]=fframe
                 
-#                f, r, d, _ = env.step(action)
                 # time steps
-                
                 rewards=[]
                 ts=[]
-                t1=time.clock()
+                
                 for t in xrange(params['timesteps']):
                     done=False
                     
@@ -463,13 +461,10 @@ if __name__ == '__main__':
                     
                     rcum=0    
                     for i in range(4):
-                        t1Frame=time.clock()
 #                        f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
-                        
                         obsNew[:,:,i]=fframe
-                        t2Frame=time.clock()
                         
                         c+=1
                         rcum+=r
@@ -478,7 +473,9 @@ if __name__ == '__main__':
 #                            done=True
 #                            break
                     
+                    t1Frame=time.clock()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
+                    t2Frame=time.clock()
                     rewards.append(rcum)
                     
                     obs=obsNew
@@ -492,7 +489,7 @@ if __name__ == '__main__':
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
-                            rate=t/(t2-t1)
+                            rate=c/(t2-t1)
                             print("\r[Epis: {} || it-Rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
                         
