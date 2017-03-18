@@ -425,7 +425,7 @@ if __name__ == '__main__':
             
             for i in xrange(1,params['episodes']):
                 f = env.reset()
-                fb_init=FrameBatch(sess)
+                fb_init=FrameBatch()
                 
                 action,_ = dqa.takeAction()
                 
@@ -444,7 +444,7 @@ if __name__ == '__main__':
                     
                     t1Frame=time.clock()
                     
-                    fb=FrameBatch(sess)
+                    fb=FrameBatch()
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:

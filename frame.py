@@ -11,10 +11,9 @@ import cv2
 
 class FrameBatch(object):
     
-    def __init__(self,sess,size=[84,84],frames=4,makeGif=False):
+    def __init__(self,size=[84,84],frames=4,makeGif=False):
         self.size=size
         self.frames=4
-        self.sess=sess
         self.batchReady=False
         self.frameLst=[]
         self.cnt=0
