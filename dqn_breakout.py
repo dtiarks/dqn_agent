@@ -148,8 +148,8 @@ class DQNAgent(object):
         self.sess=sess
         self.current_loss=0
         
-        self.run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-        self.run_metadata = tf.RunMetadata()
+#        self.run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+#        self.run_metadata = tf.RunMetadata()
         
         self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32,trainable=False)
         self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32,trainable=False)
@@ -318,13 +318,18 @@ class DQNAgent(object):
 
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
 
-        self.sess.run([self.train],feed_dict=xp_feed_dict, options=self.run_options, run_metadata=self.run_metadata)
+        #self.sess.run([self.train],feed_dict=xp_feed_dict, options=self.run_options, run_metadata=self.run_metadata)
+        t1=time.clock()
+        self.sess.run([self.train],feed_dict=xp_feed_dict)
+        t2=time.clock()
+        print("\r[Time: {}]".format((t2-t1),end=''))
+        
         
         # Create the Timeline object, and write it to a json
-        tl = timeline.Timeline(self.run_metadata.step_stats)
-        ctf = tl.generate_chrome_trace_format()
-        with open('timeline.json', 'w') as f:
-            f.write(ctf)
+#        tl = timeline.Timeline(self.run_metadata.step_stats)
+#        ctf = tl.generate_chrome_trace_format()
+#        with open('timeline.json', 'w') as f:
+#            f.write(ctf)
         
         if self.global_step.eval()%self.params['summary_steps']==0:
             l,summary=self.sess.run([self.loss,self.merged],feed_dict=xp_feed_dict)
@@ -467,7 +472,7 @@ if __name__ == '__main__':
                         t2=time.clock()
                         if t>0:
                             rate=t/(t2-t1)
-                            print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
+#                            print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
                         sys.stdout.flush()
                         
                     obs=obsNew
