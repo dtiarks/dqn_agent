@@ -433,7 +433,6 @@ if __name__ == '__main__':
             cumRewards=[]
             
             for i in xrange(1,params['episodes']):
-                print("Starting episode {}".format(i))
                 f = env.reset()
                 
                 action,_ = dqa.takeAction()
@@ -462,7 +461,7 @@ if __name__ == '__main__':
                     
                     rcum=0    
                     for i in range(4):
-#                        f, r, d, _ = env.step(action)
+                        f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
                         obsNew[:,:,i]=fframe
@@ -470,9 +469,9 @@ if __name__ == '__main__':
                         c+=1
                         rcum+=r
                         
-#                        if d:
-#                            done=True
-#                            break
+                        if d:
+                            done=True
+                            break
                     
                     t1Frame=time.clock()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)],dtype=np.bool)])
@@ -482,8 +481,8 @@ if __name__ == '__main__':
                     obs=obsNew
                     
                     loss=-1.
-#                    if c>=params['replaystartsize']:
-#                        loss=dqa.trainNet()
+                    if c>=params['replaystartsize']:
+                        loss=dqa.trainNet()
                     
                     loss=-1.
                     if t%50==0:
@@ -527,14 +526,14 @@ if __name__ == '__main__':
                 qmean=[]
                 done=False
                 for t in xrange(params['timesteps']):
-#                    action,g = dqa.takeAction(obs,params['testeps'])
-                    action,g = 0,0
-#                    q=dqa.q_predict.meanQ(obs)
-                    q=0
+                    action,g = dqa.takeAction(obs,params['testeps'])
+#                    action,g = 0,0
+                    q=dqa.q_predict.meanQ(obs)
+#                    q=0
                     
                     rcum=0    
                     for i in range(4):
-#                        f, r, d, _ = env.step(action)
+                        f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
                         obsNew[:,:,i]=fframe
@@ -542,13 +541,13 @@ if __name__ == '__main__':
                         c+=1
                         rcum+=r
                         
-#                        if d:
-#                            done=True
-#                            break
+                        if d:
+                            done=True
+                            break
                     
                     if not done:
-#                        q=dqa.q_predict.meanQ(obs)
-                        q=0
+                        q=dqa.q_predict.meanQ(obs)
+#                        q=0
                         qmean.append(q)
                     
                     obs=obsNew
