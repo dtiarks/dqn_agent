@@ -32,8 +32,8 @@ class ReplayMemory():
         self.tail=self.count%self.size[0]
             
         #self.frame_buffer[self.tail,...]=trans[0]
-        self.action_buffer[self.tail]=trans[1]
-        self.reward_buffer[self.tail]=trans[2]
+        #self.action_buffer[self.tail]=trans[1]
+        #self.reward_buffer[self.tail]=trans[2]
         #self.new_frame_buffer[self.tail,...]=trans[3]
         #self.done_buffer[self.tail,...]=trans[4]
         
