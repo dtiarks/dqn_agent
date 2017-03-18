@@ -339,7 +339,7 @@ class DQNAgent(object):
         t1=time.clock()
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
         t2=time.clock()
-        print("Time :{}".format(t2-t1))
+        #print("Time :{}".format(t2-t1))
         
         self.sess.run([self.train],feed_dict=xp_feed_dict)
         
