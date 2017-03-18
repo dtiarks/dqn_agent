@@ -438,6 +438,7 @@ if __name__ == '__main__':
                 action,_ = dqa.takeAction()
                 
                 obs=np.zeros((84,84,4),dtype=np.uint8)
+                obsNew=np.zeros((84,84,4),dtype=np.uint8)
                 for i in range(4):
                     f, r, done, _ = env.step(action)
                     
@@ -445,7 +446,7 @@ if __name__ == '__main__':
                     fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
                     obs[:,:,i]=fframe
                 
-                
+#                f, r, d, _ = env.step(action)
                 # time steps
                 
                 rewards=[]
@@ -454,18 +455,16 @@ if __name__ == '__main__':
                 for t in xrange(params['timesteps']):
                     done=False
                     
-                    
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
-                        
                         action,g = dqa.takeAction(obs)
                     
-                    obsNew=np.zeros((84,84,4),dtype=np.uint8)
+                    
                     rcum=0    
                     for i in range(4):
                         t1Frame=time.clock()
-                        f, r, d, _ = env.step(action)
+#                        f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
                         
@@ -475,9 +474,9 @@ if __name__ == '__main__':
                         c+=1
                         rcum+=r
                         
-                        if d:
-                            done=True
-                            break
+#                        if d:
+#                            done=True
+#                            break
                     
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
                     rewards.append(rcum)
