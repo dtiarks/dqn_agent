@@ -386,7 +386,7 @@ if __name__ == '__main__':
             "epoches":1000,
             "testruns":30,
             "testeps":0.05,
-            "timesteps":10000,#10000,
+            "timesteps":200,#10000,
             "batchsize":32,
             "replaymemory":250000,
             "targetupdate":10000,
