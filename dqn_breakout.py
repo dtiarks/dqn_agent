@@ -357,6 +357,15 @@ class DQNAgent(object):
         
     def writeFrame(self,frame,episode,timestep):
         self._writeFrame(frame,episode,timestep,self.picdir)
+        
+        
+def rescaleFrame(frame):
+    ret = cv2.resize(frame,(84,84))
+    return ret
+
+def getYChannel(frame):
+    xyz = cv2.cvtColor(frame, cv2.COLOR_RGB2XYZ)
+    return xyz
 
 if __name__ == '__main__':      
     
@@ -425,14 +434,17 @@ if __name__ == '__main__':
             
             for i in xrange(1,params['episodes']):
                 f = env.reset()
-                fb_init=FrameBatch()
                 
                 action,_ = dqa.takeAction()
                 
-                while fb_init.addFrame(f) is not True:
+                obs=np.zeros((84,84,4))
+                for i in range(4):
                     f, r, done, _ = env.step(action)
                     
-                obs=fb_init.getNextBatch()
+                    rframe=rescaleFrame(f)
+                    fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
+                    obs[:,:,i]=fframe
+                
                 
                 # time steps
                 
@@ -442,34 +454,30 @@ if __name__ == '__main__':
                 for t in xrange(params['timesteps']):
                     done=False
                     
-                    
-                    
-                    fb=FrameBatch()
+                    t1Frame=time.clock()
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
                         
                         action,g = dqa.takeAction(obs)
                     
+                    obsNew=np.zeros((84,84,4))
                     rcum=0    
-                    while fb.addFrame(f) is not True:
-    #                    env.render()
-#                        if done:
-#                            break
-                        t1Frame=time.clock()
-                        f, r, d, _ = env.step(action)   
-                        t2Frame=time.clock()
+                    for i in range(4):
+                        f, r, d, _ = env.step(action)
+                        
+                        rframe=rescaleFrame(f)
+                        fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
+                        obsNew[:,:,i]=fframe
+                        
                         c+=1
                         rcum+=r
                         
                         if d:
                             done=True
                     
-                    obsNew=fb.getNextBatch()
-                    
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
-                    del fb
-                    
+                    t2Frame=time.clock()
                     rewards.append(rcum)
                     
                     
@@ -504,61 +512,61 @@ if __name__ == '__main__':
                 
                 
             
-            testq=[]
-            testreward=[]                    
-            for s in range(1,params['testruns']):
-                f = evalenv.reset()
-                fb_init=FrameBatch(sess)
+#            testq=[]
+#            testreward=[]                    
+#            for s in range(1,params['testruns']):
+#                f = evalenv.reset()
+#                fb_init=FrameBatch()
+#                
+#                action,_ = dqa.takeAction()
+#                
+#                while fb_init.addFrame(f) is not True:
+#                    f, r, done, _ = evalenv.step(action)
+#                    
+#                obs=fb_init.getNextBatch()
+#                
+#                rcum=r
+#                qmean=[]
+#                done=False
+#                for t in xrange(params['timesteps']):
+#                    fb=FrameBatch()
+#                    
+#                    action,g = dqa.takeAction(obs,params['testeps'])
+#                    q=dqa.q_predict.meanQ(obs)
+#                    
+#                    rmax=0.
+#                    while fb.addFrame(f) is not True:
+#    #                    env.render()
+#                        if done:
+#                            break
+#                        f, r, d, _ = evalenv.step(action)   
+#                        rcum+=r
+#                        if d:
+#                            done=True
+#                    
+#                    if not done:
+#                        obs=fb.getNextBatch()
+#                        q=dqa.q_predict.meanQ(obs)
+#                        qmean.append(q)
+#                    
+#                    if done:
+#                        testq.append(np.mean(qmean))
+#                        testreward.append(rcum)
+#                        if s%10==0:
+#                            print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean),end='')
+#                        sys.stdout.flush()
+#                        break
+#            
+#            qepoche=np.mean(testq)
+#            qepoche_std=np.std(testq)
+#            repoche=np.mean(testreward)
+#            repoche_std=np.std(testreward)
+#            epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
+#            dqa.epocheStats(repoche,qepoche)
+#            print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
+#                    
                 
-                action,_ = dqa.takeAction()
-                
-                while fb_init.addFrame(f) is not True:
-                    f, r, done, _ = evalenv.step(action)
-                    
-                obs=fb_init.getNextBatch()
-                
-                rcum=r
-                qmean=[]
-                done=False
-                for t in xrange(params['timesteps']):
-                    fb=FrameBatch(sess)
-                    
-                    action,g = dqa.takeAction(obs,params['testeps'])
-                    q=dqa.q_predict.meanQ(obs)
-                    
-                    rmax=0.
-                    while fb.addFrame(f) is not True:
-    #                    env.render()
-                        if done:
-                            break
-                        f, r, d, _ = evalenv.step(action)   
-                        rcum+=r
-                        if d:
-                            done=True
-                    
-                    if not done:
-                        obs=fb.getNextBatch()
-                        q=dqa.q_predict.meanQ(obs)
-                        qmean.append(q)
-                    
-                    if done:
-                        testq.append(np.mean(qmean))
-                        testreward.append(rcum)
-                        if s%10==0:
-                            print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean),end='')
-                        sys.stdout.flush()
-                        break
-            
-            qepoche=np.mean(testq)
-            qepoche_std=np.std(testq)
-            repoche=np.mean(testreward)
-            repoche_std=np.std(testreward)
-            epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
-            dqa.epocheStats(repoche,qepoche)
-            print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
-                    
-                
-        epoche_fd.close()
+#        epoche_fd.close()
         env.close()
     
     
