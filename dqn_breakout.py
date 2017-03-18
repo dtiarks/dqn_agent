@@ -464,12 +464,13 @@ if __name__ == '__main__':
                             done=True
                     
                     obsNew=fb.getNextBatch()
+                    t2Frame=time.clock()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
                     del fb
                     
                     rewards.append(rcum)
                     
-                    t2Frame=time.clock()
+                    
 #                    print("\r[Time: {}]".format((t2-t1),end=''))
                     dtFrame=(t2Frame-t1Frame)
                     sys.stdout.flush()
