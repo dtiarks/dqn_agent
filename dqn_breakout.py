@@ -451,18 +451,19 @@ if __name__ == '__main__':
                         
                         action,g = dqa.takeAction(obs)
                         
-                        
+                    rcum=0    
                     while fb.addFrame(f) is not True:
     #                    env.render()
 #                        if done:
 #                            break
                         f, r, d, _ = env.step(action)   
                         c+=1
+                        rcum+=1
                         rewards.append(r)
                         if d:
                             done=True
                     obsNew=fb.getNextBatch()
-                    dqa.addTransition([obs,action, r,obsNew, np.array(params['actionsize']*[(not done)])])
+                    dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
                     
                     t2Frame=time.clock()
 #                    print("\r[Time: {}]".format((t2-t1),end=''))
