@@ -464,11 +464,12 @@ if __name__ == '__main__':
                     obsNew=np.zeros((84,84,4),dtype=np.uint8)
                     rcum=0    
                     for i in range(4):
+                        t1Frame=time.clock()
                         f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
                         
-                        t1Frame=time.clock()
+                        
                         obsNew[:,:,i]=fframe
                         t2Frame=time.clock()
                         c+=1
