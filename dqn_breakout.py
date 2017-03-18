@@ -450,7 +450,8 @@ if __name__ == '__main__':
                     else:
                         
                         action,g = dqa.takeAction(obs)
-                        
+                    
+                    t2Frame=time.clock()
                     rcum=0    
                     while fb.addFrame(f) is not True:
     #                    env.render()
@@ -464,7 +465,7 @@ if __name__ == '__main__':
                             done=True
                     
                     obsNew=fb.getNextBatch()
-                    t2Frame=time.clock()
+                    
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
                     del fb
                     
