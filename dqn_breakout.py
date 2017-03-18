@@ -464,6 +464,7 @@ if __name__ == '__main__':
                             done=True
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
+                    del fb
                     
                     t2Frame=time.clock()
 #                    print("\r[Time: {}]".format((t2-t1),end=''))
@@ -471,8 +472,8 @@ if __name__ == '__main__':
                     sys.stdout.flush()
                     
                     loss=-1.
-                    if c>=params['replaystartsize']:
-                        loss=dqa.trainNet()
+#                    if c>=params['replaystartsize']:
+#                        loss=dqa.trainNet()
                     
                     
                     if t%50==0:
