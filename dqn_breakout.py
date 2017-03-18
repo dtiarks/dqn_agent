@@ -465,13 +465,12 @@ if __name__ == '__main__':
                     rcum=0    
                     for i in range(4):
                         f, r, d, _ = env.step(action)
-                        t1Frame=time.clock()
                         rframe=rescaleFrame(f)
-                        t2Frame=time.clock()
                         fframe=getYChannel(rframe)[:,:,-1]
                         
+                        t1Frame=time.clock()
                         obsNew[:,:,i]=fframe
-                        
+                        t2Frame=time.clock()
                         c+=1
                         rcum+=r
                         
