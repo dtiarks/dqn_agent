@@ -360,7 +360,7 @@ class DQNAgent(object):
         
         
 def rescaleFrame(frame):
-    ret = cv2.resize(frame,(84,84))
+    ret = np.array(cv2.resize(frame,(84,84)),dtype=np.uint8)
     return ret
 
 def getYChannel(frame):
@@ -469,42 +469,37 @@ if __name__ == '__main__':
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
                         
-                        
                         obsNew[:,:,i]=fframe
                         t2Frame=time.clock()
+                        
                         c+=1
                         rcum+=r
                         
                         if d:
                             done=True
+                            break
                     
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
-                    
                     rewards.append(rcum)
                     
-                    
-#                    print("\r[Time: {}]".format((t2-t1),end=''))
-                    dtFrame=(t2Frame-t1Frame)
-                    sys.stdout.flush()
+                    obs=obsNew
                     
                     loss=-1.
 #                    if c>=params['replaystartsize']:
 #                        loss=dqa.trainNet()
                     
-                    
+                    loss=-1.
                     if t%50==0:
+                        dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
                             rate=t/(t2-t1)
-                            print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
+                            print("\r[Epis: {} || it-Rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
                         
-                    obs=obsNew
-                    
                     if c%params['targetupdate']==0: #check this
                         dqa.resetTarget()
                         
-                    
                     if done: 
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
