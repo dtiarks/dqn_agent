@@ -45,7 +45,7 @@ class FrameBatch(object):
             print("Error in preprocessing: more than %d frames in batch!"%self.frames)
             return False
         elif self.cnt==self.frames:
-            self.finalBatch=np.array(self.frameLst)
+            self.finalBatch=np.array(self.frameLst).astype(np.uint8)
             return True
         else:
             return False

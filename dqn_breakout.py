@@ -465,19 +465,20 @@ if __name__ == '__main__':
                     dqa.addTransition([obs,action, r,obsNew, np.array(params['actionsize']*[(not done)])])
                     
                     t2=time.clock()
-                    print("\r[Time: {}]".format((t2-t1),end=''))
+#                    print("\r[Time: {}]".format((t2-t1),end=''))
+                    dtFrame=(t2-t1)
                     sys.stdout.flush()
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
                         loss=dqa.trainNet()
                     
-                    curr_xp=len(dqa.frame_buffer)
-                    if t%40==0:
+                    
+                    if t%50==0:
                         t2=time.clock()
                         if t>0:
                             rate=t/(t2-t1)
-#                            print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,curr_xp,c),end='')
+                            print("\r[Epis: {} || Time: {} || Loss: {} || Replaybuffer: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
                         
                     obs=obsNew
