@@ -458,7 +458,7 @@ if __name__ == '__main__':
 #                            break
                         f, r, d, _ = env.step(action)   
                         c+=1
-                        rcum+=1
+                        rcum+=r
                         rewards.append(r)
                         if d:
                             done=True
