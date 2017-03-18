@@ -464,9 +464,9 @@ if __name__ == '__main__':
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,action, r,obsNew, np.array(params['actionsize']*[(not done)])])
                     
-                    t2=time.clock()
+                    t2Frame=time.clock()
 #                    print("\r[Time: {}]".format((t2-t1),end=''))
-                    dtFrame=(t2-t1)
+                    dtFrame=(t2Frame-t1)
                     sys.stdout.flush()
                     
                     loss=-1.
