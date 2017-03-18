@@ -39,10 +39,10 @@ class ReplayMemory():
         
         self.count+=1
         
-#        if self.count>self.size[0]:
-#            self.index=range(self.size[0])
-#        else:
-#            self.index=range(self.count)
+        if self.count>self.size[0]:
+            self.index=np.arange(self.size[0])
+        else:
+            self.index=np.arange(self.count)
             
     def sampleTransition(self,batchsize=32):
         if self.index==None:
