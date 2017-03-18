@@ -437,7 +437,7 @@ if __name__ == '__main__':
                 
                 action,_ = dqa.takeAction()
                 
-                obs=np.zeros((84,84,4))
+                obs=np.zeros((84,84,4),dtype=np.uint8)
                 for i in range(4):
                     f, r, done, _ = env.step(action)
                     
@@ -450,7 +450,7 @@ if __name__ == '__main__':
                 
                 rewards=[]
                 ts=[]
-                t1=time.clock()
+                
                 for t in xrange(params['timesteps']):
                     done=False
                     
@@ -461,13 +461,15 @@ if __name__ == '__main__':
                         
                         action,g = dqa.takeAction(obs)
                     
-                    obsNew=np.zeros((84,84,4))
+                    obsNew=np.zeros((84,84,4),dtype=np.uint8)
                     rcum=0    
                     for i in range(4):
                         f, r, d, _ = env.step(action)
                         
                         rframe=rescaleFrame(f)
-                        fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
+                        t1=time.clock()
+                        fframe=getYChannel(rframe)[:,:,-1]
+                        t2Frame=time.clock()
                         obsNew[:,:,i]=fframe
                         
                         c+=1
@@ -477,7 +479,7 @@ if __name__ == '__main__':
                             done=True
                     
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)])])
-                    t2Frame=time.clock()
+                    
                     rewards.append(rcum)
                     
                     
