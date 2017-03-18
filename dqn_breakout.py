@@ -319,10 +319,9 @@ class DQNAgent(object):
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
 
         #self.sess.run([self.train],feed_dict=xp_feed_dict, options=self.run_options, run_metadata=self.run_metadata)
-        t1=time.clock()
+        
         self.sess.run([self.train],feed_dict=xp_feed_dict)
-        t2=time.clock()
-        print("\r[Time: {}]".format((t2-t1),end=''))
+        
         
         
         # Create the Timeline object, and write it to a json
@@ -439,9 +438,12 @@ if __name__ == '__main__':
                 
                 rewards=[]
                 ts=[]
-                done=False
                 t1=time.clock()
                 for t in xrange(params['timesteps']):
+                    done=False
+                    
+                    t1=time.clock()
+                    
                     fb=FrameBatch(sess)
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
@@ -462,6 +464,9 @@ if __name__ == '__main__':
                     obsNew=fb.getNextBatch()
                     dqa.addTransition([obs,action, r,obsNew, np.array(params['actionsize']*[(not done)])])
                     
+                    t2=time.clock()
+                    print("\r[Time: {}]".format((t2-t1),end=''))
+                    sys.stdout.flush()
                     
                     loss=-1.
                     if c>=params['replaystartsize']:
