@@ -433,6 +433,7 @@ if __name__ == '__main__':
             cumRewards=[]
             
             for i in xrange(1,params['episodes']):
+                print("Starting episode {}".format(i))
                 f = env.reset()
                 
                 action,_ = dqa.takeAction()
