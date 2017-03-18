@@ -450,11 +450,11 @@ if __name__ == '__main__':
                 
                 rewards=[]
                 ts=[]
-                
+                t1=time.clock()
                 for t in xrange(params['timesteps']):
                     done=False
                     
-                    t1Frame=time.clock()
+                    
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
@@ -467,7 +467,7 @@ if __name__ == '__main__':
                         f, r, d, _ = env.step(action)
                         
                         rframe=rescaleFrame(f)
-                        t1=time.clock()
+                        t1Frame=time.clock()
                         fframe=getYChannel(rframe)[:,:,-1]
                         t2Frame=time.clock()
                         obsNew[:,:,i]=fframe
