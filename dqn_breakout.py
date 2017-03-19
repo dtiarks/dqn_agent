@@ -462,6 +462,7 @@ if __name__ == '__main__':
                 for t in xrange(params['timesteps']):
                     done=False
                     obsNew=np.zeros((84,84,4),dtype=np.uint8)
+                    
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
@@ -481,21 +482,21 @@ if __name__ == '__main__':
                         if d:
                             done=True
                     
-                    t1Frame=time.clock()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)],dtype=np.bool)])
-                    t2Frame=time.clock()
                     rewards.append(rcum)
                     
                     obs=obsNew
                     
+                    t1Frame=time.clock()
                     loss=-1.
                     if c>=params['replaystartsize']:
                         loss=dqa.trainNet()
+                    t2Frame=time.clock()
                     
-                    if t%50==0:
+                    if c%50==0:
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
-                        if t>0:
+                        if c>0:
                             rate=c/(t2-t1)
                             print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
