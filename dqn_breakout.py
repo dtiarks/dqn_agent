@@ -549,7 +549,6 @@ if __name__ == '__main__':
                     q=dqa.q_predict.meanQ(obs)
 #                    q=0
                     
-                    rcum=0    
                     for k in range(4):
                         f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
@@ -569,6 +568,14 @@ if __name__ == '__main__':
                         qmean.append(q)
                     
                     obs=obsNew
+                    
+                    if c%50==0:
+                        dtFrame=(t2Frame-t1Frame)
+                        t2=time.clock()
+                        if t>0:
+                            rate=ep_ctr/(t2-t1)
+                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
+                        sys.stdout.flush()
                     
                     if done:
                         testq.append(np.mean(qmean))
