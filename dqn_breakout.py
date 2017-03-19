@@ -448,12 +448,12 @@ if __name__ == '__main__':
                 
                 obs=np.zeros((84,84,4),dtype=np.uint8)
                 
-                for i in range(4):
+                for k in range(4):
                     f, r, done, _ = env.step(action)
                     
                     rframe=rescaleFrame(f)
                     fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
-                    obs[:,:,i]=fframe
+                    obs[:,:,k]=fframe
                 
                 # time steps
                 rewards=[]
@@ -496,7 +496,6 @@ if __name__ == '__main__':
                     if c>=params['replaystartsize']:
                         loss=dqa.trainNet()
                     
-                    
                     if c%params['targetupdate']==0:
                         dqa.resetTarget()
                     
@@ -528,12 +527,12 @@ if __name__ == '__main__':
                 
                 obs=np.zeros((84,84,4),dtype=np.uint8)
                 obsNew=np.zeros((84,84,4),dtype=np.uint8)
-                for i in range(4):
+                for k in range(4):
                     f, r, done, _ = env.step(action)
                     
                     rframe=rescaleFrame(f)
                     fframe=np.array(getYChannel(rframe)[:,:,-1]).astype(np.uint8)
-                    obs[:,:,i]=fframe
+                    obs[:,:,k]=fframe
                 
                 rcum=r
                 qmean=[]
