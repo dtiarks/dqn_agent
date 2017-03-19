@@ -523,6 +523,7 @@ if __name__ == '__main__':
                         
 
                     if done: 
+                        t2=time.clock()
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
                         dqa.saveRewards(cumRewards,t)
