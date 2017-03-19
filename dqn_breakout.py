@@ -461,7 +461,7 @@ if __name__ == '__main__':
                 
                 for t in xrange(params['timesteps']):
                     done=False
-                    t1Frame=time.clock()
+                    
                     obsNew=np.zeros((84,84,4),dtype=np.uint8)
                     
                     if c<params['replaystartsize']:
@@ -482,8 +482,9 @@ if __name__ == '__main__':
                         
                         if d:
                             done=True
-                    t2Frame=time.clock()
+                    t1Frame=time.clock()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)],dtype=np.bool)])
+                    t2Frame=time.clock()
                     rewards.append(rcum)
                     
                     obs=obsNew
