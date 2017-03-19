@@ -511,7 +511,7 @@ if __name__ == '__main__':
                     if done: 
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
-                        dqa.saveRewards(cumRewards,t)
+#                        dqa.saveRewards(cumRewards,t)
                         break
                     
                 
