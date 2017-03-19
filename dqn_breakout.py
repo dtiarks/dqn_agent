@@ -209,9 +209,11 @@ class DQNAgent(object):
         
         qpred=self.q_predict.estimateAction()
         qtarget=self.q_target.estimateQGreedy()
+        diff=qtarget-qpred
         
-        self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
-        self.loss = tf.reduce_mean(self.losses)
+#        self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
+#        self.loss = tf.reduce_mean(self.losses)
+        self.loss = tf.reduce_mean(self.clipped_error(diff))
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
 
@@ -278,6 +280,13 @@ class DQNAgent(object):
     def epocheStats(self,reward,q):
         self.epoche_value.assign(q).op.run()
         self.epoche_reward.assign(reward).op.run()
+        
+    def clipped_error(self,x):
+        # Huber loss
+        try:
+            return tf.select(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)
+        except:
+            return tf.where(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)
             
         
     def takeAction(self,state=None,eps_ext=None):
@@ -386,7 +395,7 @@ if __name__ == '__main__':
             "epoches":1000,
             "testruns":30,
             "testeps":0.05,
-            "timesteps":200,#10000,
+            "timesteps":20000,#10000,
             "batchsize":32,
             "replaymemory":250000,
             "targetupdate":10000,
@@ -438,7 +447,7 @@ if __name__ == '__main__':
                 action,_ = dqa.takeAction()
                 
                 obs=np.zeros((84,84,4),dtype=np.uint8)
-                obsNew=np.zeros((84,84,4),dtype=np.uint8)
+                
                 for i in range(4):
                     f, r, done, _ = env.step(action)
                     
@@ -452,7 +461,7 @@ if __name__ == '__main__':
                 
                 for t in xrange(params['timesteps']):
                     done=False
-                    
+                    obsNew=np.zeros((84,84,4),dtype=np.uint8)
                     if c<params['replaystartsize']:
                         action,g = dqa.takeAction()
                     else:
@@ -471,7 +480,6 @@ if __name__ == '__main__':
                         
                         if d:
                             done=True
-                            break
                     
                     t1Frame=time.clock()
                     dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)],dtype=np.bool)])
@@ -484,13 +492,12 @@ if __name__ == '__main__':
                     if c>=params['replaystartsize']:
                         loss=dqa.trainNet()
                     
-                    loss=-1.
                     if t%50==0:
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
                             rate=c/(t2-t1)
-                            print("\r[Epis: {} || it-Rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
+                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
                         
                     if c%params['targetupdate']==0: #check this
@@ -546,7 +553,7 @@ if __name__ == '__main__':
                             break
                     
                     if not done:
-                        q=dqa.q_predict.meanQ(obs)
+                        q=dqa.q_predict.meanQ(obsNew)
 #                        q=0
                         qmean.append(q)
                     
