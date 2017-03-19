@@ -464,6 +464,7 @@ if __name__ == '__main__':
                 ts=[]
                 t1=time.clock()
                 ep_ctr=0
+                print("Starting episode {}".format(i))
                 for t in xrange(params['timesteps']):
                     done=False
                     
