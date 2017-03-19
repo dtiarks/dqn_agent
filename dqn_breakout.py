@@ -475,7 +475,7 @@ if __name__ == '__main__':
                     else:
                         action,g = dqa.takeAction(obs)
                     
-                    
+                    print("Timestep {}".format(t))
                     rcum=0    
                     for k in range(4):
                         f, r, d, _ = env.step(action)
@@ -496,7 +496,7 @@ if __name__ == '__main__':
                     
                     obs=obsNew
                     
-                    print("Timestep {}".format(t))
+                    
                     loss=-1.
                     if c>=params['replaystartsize']:
                         loss=dqa.trainNet()
