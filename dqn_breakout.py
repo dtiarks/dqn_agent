@@ -541,7 +541,7 @@ if __name__ == '__main__':
                     obs[:,:,k]=fframe
                 
                 rcum=r
-                qmean=[]
+                qmean=[0.]
                 done=False
                 for t in xrange(params['timesteps']):
                     action,g = dqa.takeAction(obs,params['testeps'])
@@ -562,10 +562,8 @@ if __name__ == '__main__':
                             done=True
                             break
                     
-                    if not done:
-                        q=dqa.q_predict.meanQ(obsNew)
-#                        q=0
-                        qmean.append(q)
+                    q=dqa.q_predict.meanQ(obsNew)
+                    qmean.append(q)
                     
                     obs=obsNew
                     
