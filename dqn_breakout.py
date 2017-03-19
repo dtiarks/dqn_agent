@@ -585,6 +585,7 @@ if __name__ == '__main__':
             epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
             dqa.epocheStats(repoche,qepoche)
             print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
+            epoche_done=False
                     
                 
         epoche_fd.close()
