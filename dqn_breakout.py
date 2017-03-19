@@ -475,7 +475,7 @@ if __name__ == '__main__':
                     else:
                         action,g = dqa.takeAction(obs)
                     
-                    print("Timestep {}".format(t))
+                    
                     rcum=0    
                     for k in range(4):
                         f, r, d, _ = env.step(action)
@@ -509,7 +509,7 @@ if __name__ == '__main__':
                     
                     
                     if c%50==0:
-                        
+                        print("Timestep {}".format(t))
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
