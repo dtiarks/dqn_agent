@@ -395,6 +395,7 @@ if __name__ == '__main__':
             "epoches":1000,
             "testruns":30,
             "testeps":0.05,
+            "testevery":25000,
             "timesteps":20000,#10000,
             "batchsize":32,
             "replaymemory":250000,
@@ -436,12 +437,15 @@ if __name__ == '__main__':
         evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
         c=0
-        
+        epoche_done=False
         for e in xrange(params['epoches']):
             #episode loop
             cumRewards=[]
             
             for i in xrange(1,params['episodes']):
+                if epoche_done:
+                    break
+
                 f = env.reset()
                 
                 action,_ = dqa.takeAction()
@@ -495,6 +499,9 @@ if __name__ == '__main__':
                     loss=-1.
                     if c>=params['replaystartsize']:
                         loss=dqa.trainNet()
+                        
+                    if c%params["testevery"]==0:
+                        epoche_done=True
                     
                     if c%params['targetupdate']==0:
                         dqa.resetTarget()
@@ -508,7 +515,6 @@ if __name__ == '__main__':
                         sys.stdout.flush()
                         
 
-                        
                     if done: 
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
