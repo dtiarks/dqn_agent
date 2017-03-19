@@ -18,7 +18,8 @@ class ReplayMemory():
         
         self.tail=0
         self.count=0
-        self.index=None
+        self.index=np.arange(self.size[0])
+        
         
         
         self.frame_buffer=np.empty(np.append(self.size,frame_shape),dtype=np.uint8)
@@ -39,16 +40,14 @@ class ReplayMemory():
         
         self.count+=1
         
-        if self.count>self.size[0]:
-            self.index=np.arange(self.size[0])
-        else:
-            self.index=np.arange(self.count)
             
     def sampleTransition(self,batchsize=32):
-        if self.index==None:
-            return None
+        if self.count>self.size[0]:
+            maxidx=self.size[0]
+        else:
+            maxidx=self.count
         
-        idx=np.random.choice(self.index,size=batchsize)
+        idx=np.random.choice(self.index[:maxidx],size=batchsize)
         
         ret=[self.frame_buffer[idx,...],
              self.action_buffer[idx],
