@@ -441,7 +441,7 @@ if __name__ == '__main__':
         for e in xrange(params['epoches']):
             #episode loop
             cumRewards=[]
-            
+            print("Starting epoche {}".format(e))
             for i in xrange(1,params['episodes']):
                 if epoche_done:
                     break
