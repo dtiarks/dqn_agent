@@ -436,7 +436,7 @@ if __name__ == '__main__':
         evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
         c=0
-        t1=time.clock()
+        
         for e in xrange(params['epoches']):
             #episode loop
             cumRewards=[]
@@ -458,7 +458,7 @@ if __name__ == '__main__':
                 # time steps
                 rewards=[]
                 ts=[]
-                
+                t1=time.clock()
                 for t in xrange(params['timesteps']):
                     done=False
                     
@@ -501,8 +501,8 @@ if __name__ == '__main__':
                     if c%50==0:
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
-                        if c>0:
-                            rate=c/(t2-t1)
+                        if t>0:
+                            rate=t/(t2-t1)
                             print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
                         
