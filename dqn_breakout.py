@@ -464,7 +464,7 @@ if __name__ == '__main__':
                 ts=[]
                 t1=time.clock()
                 ep_ctr=0
-                print("Starting episode {}".format(i))
+                
                 for t in xrange(params['timesteps']):
                     done=False
                     
@@ -475,7 +475,7 @@ if __name__ == '__main__':
                     else:
                         action,g = dqa.takeAction(obs)
                     
-                    
+                    print("Timestep {}".format(t))
                     rcum=0    
                     for k in range(4):
                         f, r, d, _ = env.step(action)
