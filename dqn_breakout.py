@@ -412,7 +412,7 @@ if __name__ == '__main__':
             "mingradientmomentum":0.00,
             "initexploration":1.0,
             "finalexploration":0.1,
-            "finalexpframe":1000000,
+            "finalexpframe":250000,
             "replaystartsize":50000,
             "framesize":84,
             "frames":4,
