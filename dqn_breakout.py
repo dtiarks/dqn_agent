@@ -459,6 +459,7 @@ if __name__ == '__main__':
                 rewards=[]
                 ts=[]
                 t1=time.clock()
+                ep_ctr=0
                 for t in xrange(params['timesteps']):
                     done=False
                     
@@ -471,14 +472,15 @@ if __name__ == '__main__':
                     
                     
                     rcum=0    
-                    for i in range(4):
+                    for k in range(4):
                         f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
-                        obsNew[:,:,i]=fframe
+                        obsNew[:,:,k]=fframe
                         
                         c+=1
                         rcum+=r
+                        ep_ctr+=1
                         
                         if d:
                             done=True
@@ -502,7 +504,7 @@ if __name__ == '__main__':
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
-                            rate=t/(t2-t1)
+                            rate=ep_ctr/(t2-t1)
                             print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                         sys.stdout.flush()
                         
@@ -543,11 +545,11 @@ if __name__ == '__main__':
 #                    q=0
                     
                     rcum=0    
-                    for i in range(4):
+                    for k in range(4):
                         f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
-                        obsNew[:,:,i]=fframe
+                        obsNew[:,:,k]=fframe
                         
                         c+=1
                         rcum+=r
