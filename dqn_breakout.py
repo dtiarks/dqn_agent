@@ -554,12 +554,9 @@ if __name__ == '__main__':
                 done=False
                 for t in xrange(params['timesteps']):
                     action,g = dqa.takeAction(obs,params['testeps'])
-#                    action,g = 0,0
-                    q=dqa.q_predict.meanQ(obs)
-#                    q=0
                     
                     for k in range(4):
-                        f, r, d, _ = env.step(action)
+                        f, r, d, _ = evalenv.step(action)
                         rframe=rescaleFrame(f)
                         fframe=getYChannel(rframe)[:,:,-1]
                         obsNew[:,:,k]=fframe
@@ -575,19 +572,11 @@ if __name__ == '__main__':
                     
                     obs=obsNew
                     
-#                    if c%50==0:
-#                        dtFrame=(t2Frame-t1Frame)
-#                        t2=time.clock()
-#                        if t>0:
-#                            rate=ep_ctr/(t2-t1)
-#                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
-#                        sys.stdout.flush()
-                    
                     if done:
                         testq.append(np.mean(qmean))
                         testreward.append(rcum)
                         if s%10==0:
-                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean))
+                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,np.mean(qmean)))
 #                        sys.stdout.flush()
                         break
             
