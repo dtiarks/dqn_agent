@@ -153,6 +153,7 @@ class DQNAgent(object):
         
         self.last_reward=tf.Variable(0,name="cum_reward",dtype=tf.float32,trainable=False)
         self.last_q=tf.Variable(0,name="cum_q",dtype=tf.float32,trainable=False)
+        self.last_rate=tf.Variable(0,name="rate",dtype=tf.float32,trainable=False)
         self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32,trainable=False)
         self.epoche_reward=tf.Variable(0,name="epoche_reward",dtype=tf.float32,trainable=False)
         self.epoche_value=tf.Variable(0,name="epoche_value",dtype=tf.float32,trainable=False)
@@ -243,6 +244,7 @@ class DQNAgent(object):
         with tf.name_scope("episode_stats"):
             tf.summary.scalar('cum_reward', self.last_reward)
             tf.summary.scalar('steps', self.last_steps)
+            tf.summary.scalar('rate', self.last_rate)
         with tf.name_scope("epoche_stats"):
             tf.summary.scalar('epoche_reward', self.epoche_reward)
             tf.summary.scalar('epoche_value', self.epoche_value)
@@ -274,8 +276,11 @@ class DQNAgent(object):
     def saveRewards(self,data,steps=0):
         self.last_reward.assign(data[-1]).op.run()
         self.last_steps.assign(steps).op.run()
-        reward_file=os.path.join(self.traindir, 'rewards.dat')
-        np.savetxt(reward_file,np.array(data))
+#        reward_file=os.path.join(self.traindir, 'rewards.dat')
+#        np.savetxt(reward_file,np.array(data))
+
+    def saveItRate(self,rate):
+        self.last_rate.assign(rate).op.run()
         
     def epocheStats(self,reward,q):
         self.epoche_value.assign(q).op.run()
@@ -509,7 +514,6 @@ if __name__ == '__main__':
                     
                     
                     if c%50==0:
-                        print("Count {}".format(c))
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
@@ -521,7 +525,8 @@ if __name__ == '__main__':
                     if done: 
                         rSum=np.sum(rewards)
                         cumRewards.append(rSum)
-#                        dqa.saveRewards(cumRewards,t)
+                        dqa.saveRewards(cumRewards,t)
+                        dqa.saveItRate(ep_ctr/(t2-t1))
                         break
                     
                 
