@@ -507,9 +507,9 @@ if __name__ == '__main__':
                     if c%params['targetupdate']==0:
                         dqa.resetTarget()
                     
-                    
+                    print("Timestep {}".format(t))
                     if c%50==0:
-                        print("Timestep {}".format(t))
+                        
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
