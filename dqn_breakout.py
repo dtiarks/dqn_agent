@@ -507,9 +507,9 @@ if __name__ == '__main__':
                     if c%params['targetupdate']==0:
                         dqa.resetTarget()
                     
-                    print("Count {}".format(c))
+                    
                     if c%50==0:
-                        
+                        print("Count {}".format(c))
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
@@ -558,7 +558,6 @@ if __name__ == '__main__':
                         fframe=getYChannel(rframe)[:,:,-1]
                         obsNew[:,:,k]=fframe
                         
-                        c+=1
                         rcum+=r
                         
                         if d:
