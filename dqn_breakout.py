@@ -475,7 +475,7 @@ if __name__ == '__main__':
                     else:
                         action,g = dqa.takeAction(obs)
                     
-                    print("Timestep {}".format(t))
+                    
                     rcum=0    
                     for k in range(4):
                         f, r, d, _ = env.step(action)
@@ -508,6 +508,7 @@ if __name__ == '__main__':
                         dqa.resetTarget()
                     
                     if c%50==0:
+                        print("Timestep {}".format(t))
                         dtFrame=(t2Frame-t1Frame)
                         t2=time.clock()
                         if t>0:
@@ -568,20 +569,20 @@ if __name__ == '__main__':
                     
                     obs=obsNew
                     
-                    if c%50==0:
-                        dtFrame=(t2Frame-t1Frame)
-                        t2=time.clock()
-                        if t>0:
-                            rate=ep_ctr/(t2-t1)
-                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
-                        sys.stdout.flush()
+#                    if c%50==0:
+#                        dtFrame=(t2Frame-t1Frame)
+#                        t2=time.clock()
+#                        if t>0:
+#                            rate=ep_ctr/(t2-t1)
+#                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
+#                        sys.stdout.flush()
                     
                     if done:
                         testq.append(np.mean(qmean))
                         testreward.append(rcum)
                         if s%10==0:
-                            print("\r[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean),end='')
-                        sys.stdout.flush()
+                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean))
+#                        sys.stdout.flush()
                         break
             
             qepoche=np.mean(testq)
