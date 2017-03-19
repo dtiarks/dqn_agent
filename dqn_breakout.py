@@ -395,7 +395,7 @@ if __name__ == '__main__':
             "epoches":1000,
             "testruns":30,
             "testeps":0.05,
-            "testevery":25000,
+            "testevery":65000,
             "timesteps":20000,#10000,
             "batchsize":32,
             "replaymemory":250000,
