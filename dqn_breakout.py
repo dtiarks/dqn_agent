@@ -81,15 +81,17 @@ class QNet(object):
     
     def estimateActionGreedy(self,state_feed):
         feed=np.expand_dims(state_feed,axis=0)
+        s=np.array(feed,dtype=np.float32)/255.
         prediction_index = self.sess.run(self.greedy_actions,
-                          feed_dict={self.images_placeholder: feed})
+                          feed_dict={self.images_placeholder: s})
 
         return prediction_index[0]
     
     def meanQ(self,state_feed):
         feed=np.expand_dims(state_feed,axis=0)
+        s=np.array(feed,dtype=np.float32)/255.
         q = self.sess.run(self.action_logits,
-                          feed_dict={self.images_placeholder: feed})
+                          feed_dict={self.images_placeholder: s})
         
         qmean=np.mean(q)
 
