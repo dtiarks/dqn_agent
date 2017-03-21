@@ -447,6 +447,8 @@ if __name__ == '__main__':
             #episode loop
             cumRewards=[]
             print("Starting epoche {}".format(e))
+            ep_ctr=0
+            t1=time.clock()
             for i in xrange(1,params['episodes']):
                 if epoche_done:
                     break
@@ -467,8 +469,8 @@ if __name__ == '__main__':
                 # time steps
                 rewards=[]
                 ts=[]
-                t1=time.clock()
-                ep_ctr=0
+                
+                
                 
                 for t in xrange(params['timesteps']):
                     done=False
