@@ -115,16 +115,18 @@ class QNet(object):
         return [self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2]
     
     def updateWeights(self,w):
-        tf.assign(self.W_conv1,w[0]).op.run()
-        tf.assign(self.b_conv1,w[1]).op.run()
-        tf.assign(self.W_conv2,w[2]).op.run()
-        tf.assign(self.b_conv2,w[3]).op.run()
-        tf.assign(self.W_conv3,w[4]).op.run()
-        tf.assign(self.b_conv3,w[5]).op.run()
-        tf.assign(self.W_fc1,w[6]).op.run()
-        tf.assign(self.b_fc1,w[7]).op.run()
-        tf.assign(self.W_fc2,w[8]).op.run()
-        tf.assign(self.b_fc2,w[9]).op.run()
+        holder=[tf.assign(self.W_conv1,w[0]),
+                tf.assign(self.b_conv1,w[1]),
+                tf.assign(self.W_conv2,w[2]),
+                tf.assign(self.b_conv2,w[3]),
+                tf.assign(self.W_conv3,w[4]),
+                tf.assign(self.b_conv3,w[5]),
+                tf.assign(self.W_fc1,w[6]),
+                tf.assign(self.b_fc1,w[7]),
+                tf.assign(self.W_fc2,w[8]),
+                tf.assign(self.b_fc2,w[9])]
+        
+        self.sess.run(holder)
 
 
     def _weight_variable(self,shape,name=None):
@@ -442,7 +444,6 @@ if __name__ == '__main__':
         evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
         c=0
-        done_ctr=0
         epoche_done=False
         t1Frame=0.0001
         t2Frame=0
@@ -529,8 +530,7 @@ if __name__ == '__main__':
                         
 
                     if done: 
-                        done_ctr+=1
-                        if done_ctr%20==0:
+                        if i%20==0:
                             dtFrame=(t2Frame-t1Frame)
                             t2=time.clock()
                             if t>0:
@@ -590,7 +590,7 @@ if __name__ == '__main__':
                         testq.append(np.mean(qmean))
                         testreward.append(rcum)
                         if s%10==0:
-                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,np.qmean))
+                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean))
 #                        sys.stdout.flush()
                         break
             
