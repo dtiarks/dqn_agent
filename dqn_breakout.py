@@ -418,7 +418,7 @@ if __name__ == '__main__':
             "frames":4,
             "actionsize": env.action_space.n,
             "traindir":"./train_dir",
-            "summary_steps":50,
+            "summary_steps":250,
             "skip_episodes": 50,
             "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
@@ -442,7 +442,10 @@ if __name__ == '__main__':
         evalenv = wrappers.Monitor(evalenv, os.path.join(dqa.traindir,'monitor'), video_callable=lambda x:x%20==0)
         
         c=0
+        done_ctr=0
         epoche_done=False
+        t1Frame=0.0001
+        t2Frame=0
         for e in xrange(params['epoches']):
             #episode loop
             cumRewards=[]
@@ -471,7 +474,7 @@ if __name__ == '__main__':
                 ts=[]
                 
                 
-                
+                rcum=0
                 for t in xrange(params['timesteps']):
                     done=False
                     
@@ -483,7 +486,7 @@ if __name__ == '__main__':
                         action,g = dqa.takeAction(obs)
                     
                     
-                    rcum=0    
+                    rcum_steps=0    
                     for k in range(4):
                         f, r, d, _ = env.step(action)
                         rframe=rescaleFrame(f)
@@ -491,15 +494,14 @@ if __name__ == '__main__':
                         obsNew[:,:,k]=fframe
                         
                         c+=1
+                        rcum_steps+=r
                         rcum+=r
                         ep_ctr+=1
                         
                         if d:
                             done=True
-                    t1Frame=time.clock()
-                    dqa.addTransition([obs,action, rcum,obsNew, np.array(params['actionsize']*[(not done)],dtype=np.bool)])
-                    t2Frame=time.clock()
-                    rewards.append(rcum)
+                    
+                    dqa.addTransition([obs,action, rcum_steps,obsNew, np.array(params['actionsize']*[(not done)],dtype=np.bool)])
                     
                     obs=obsNew
                     
@@ -512,24 +514,34 @@ if __name__ == '__main__':
                         epoche_done=True
                     
                     if c%params['targetupdate']==0:
+                        t1Frame=time.clock()
                         dqa.resetTarget()
+                        t2Frame=time.clock()
                     
                     
-                    if c%50==0:
-                        dtFrame=(t2Frame-t1Frame)
-                        t2=time.clock()
-                        if t>0:
-                            rate=ep_ctr/(t2-t1)
-                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
-                        sys.stdout.flush()
+#                    if c%50==0:
+#                        dtFrame=(t2Frame-t1Frame)
+#                        t2=time.clock()
+#                        if t>0:
+#                            rate=ep_ctr/(t2-t1)
+#                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
+#                        sys.stdout.flush()
                         
 
                     if done: 
-                        t2=time.clock()
-                        rSum=np.sum(rewards)
-                        cumRewards.append(rSum)
-                        dqa.saveRewards(cumRewards,t)
-                        dqa.saveItRate(ep_ctr/(t2-t1))
+                        done_ctr+=1
+                        if done_ctr%20==0:
+                            dtFrame=(t2Frame-t1Frame)
+                            t2=time.clock()
+                            if t>0:
+                                rate=ep_ctr/(t2-t1)
+                                print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
+                            
+                            sys.stdout.flush()
+                            
+                            cumRewards.append(rcum)
+                            dqa.saveRewards(cumRewards,t)
+                            dqa.saveItRate(ep_ctr/(t2-t1))
                         break
                     
                 
@@ -578,7 +590,7 @@ if __name__ == '__main__':
                         testq.append(np.mean(qmean))
                         testreward.append(rcum)
                         if s%10==0:
-                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,np.mean(qmean)))
+                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,np.qmean))
 #                        sys.stdout.flush()
                         break
             
