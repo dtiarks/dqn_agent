@@ -566,7 +566,7 @@ if __name__ == '__main__':
                     obs[:,:,k]=fframe
                 
                 rcum=r
-                qmean=[0.]
+                qmean=[]
                 done=False
                 for t in xrange(params['timesteps']):
                     action,g = dqa.takeAction(obs,params['testeps'])
