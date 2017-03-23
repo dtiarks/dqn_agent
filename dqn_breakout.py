@@ -288,7 +288,7 @@ class DQNAgent(object):
     def epocheStats(self,reward,q,rmax):
         ops=[self.epoche_value.assign(q),
              self.epoche_reward.assign(reward),
-             self.epoche_reward.assign(rmax)]
+             self.epoche_maxreward.assign(rmax)]
         
         self.sess.run(ops)
         
