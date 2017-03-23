@@ -12,7 +12,6 @@ import gym
 import numpy as np
 import tensorflow as tf
 import time
-from frame import FrameBatch
 from collections import deque  
 import datetime
 import cv2
@@ -161,6 +160,7 @@ class DQNAgent(object):
         self.last_steps=tf.Variable(0,name="episode_steps",dtype=tf.float32,trainable=False)
         self.epoche_reward=tf.Variable(0,name="epoche_reward",dtype=tf.float32,trainable=False)
         self.epoche_value=tf.Variable(0,name="epoche_value",dtype=tf.float32,trainable=False)
+        self.epoche_maxreward=tf.Variable(0,name="epoche_max_reward",dtype=tf.float32,trainable=False)
         self.eps=params['initexploration']
         self.q_predict=QNet(sess,"prediction",params)
         self.q_target=QNet(sess,"target",params,train=False)
@@ -218,7 +218,7 @@ class DQNAgent(object):
         
 #        self.losses = tf.squared_difference(qtarget, qpred) # (r + g*max a' Q_target(s',a')-Q_predict(s,a))
 #        self.loss = tf.reduce_mean(self.losses)
-        self.loss = tf.reduce_mean(self.clipped_error(diff))
+        self.loss = tf.reduce_mean(self.td_error(diff))
         
         self.train = self.optimizer.minimize(self.loss,global_step=self.global_step)
 
@@ -237,11 +237,8 @@ class DQNAgent(object):
                 stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
             tf.summary.scalar('stddev', stddev)
             tf.summary.scalar('max', tf.reduce_max(var))
-            tf.summary.scalar('sum', tf.reduce_sum(var))
-#            tf.summary.scalar('maxq', tf.argmax(var))
             tf.summary.scalar('min', tf.reduce_min(var))
             tf.summary.histogram('histogram', var)
-            tf.summary.histogram('histogram_sum', tf.reduce_sum(var,1))
             
             
     def initSummaries(self):
@@ -251,6 +248,7 @@ class DQNAgent(object):
             tf.summary.scalar('rate', self.last_rate)
         with tf.name_scope("epoche_stats"):
             tf.summary.scalar('epoche_reward', self.epoche_reward)
+            tf.summary.scalar('epoche_maxreward', self.epoche_maxreward)
             tf.summary.scalar('epoche_value', self.epoche_value)
         with tf.name_scope("prediction_action"):
             self.variable_summaries(self.q_predict.action_logits)
@@ -277,25 +275,32 @@ class DQNAgent(object):
                 self.q_target.images_placeholder: np.array(sample[3],dtype=np.float32)/255.,
                 self.q_target.done_placeholder: np.array(sample[4],dtype=np.float32)}
         
-    def saveRewards(self,data,steps=0):
-        self.last_reward.assign(data[-1]).op.run()
-        self.last_steps.assign(steps).op.run()
+    def saveStats(self,reward,steps=0,rate=0):
+        ops=[self.last_reward.assign(reward),
+             self.last_steps.assign(steps),
+             self.last_rate.assign(rate)]
+        
+        self.sess.run(ops)
 #        reward_file=os.path.join(self.traindir, 'rewards.dat')
 #        np.savetxt(reward_file,np.array(data))
 
-    def saveItRate(self,rate):
-        self.last_rate.assign(rate).op.run()
+    
+    def epocheStats(self,reward,q,rmax):
+        ops=[self.epoche_value.assign(q),
+             self.epoche_reward.assign(reward),
+             self.epoche_reward.assign(rmax)]
         
-    def epocheStats(self,reward,q):
-        self.epoche_value.assign(q).op.run()
-        self.epoche_reward.assign(reward).op.run()
+        self.sess.run(ops)
         
-    def clipped_error(self,x):
-        # Huber loss
-        try:
-            return tf.select(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)
-        except:
-            return tf.where(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)
+    def td_error(self,x):
+        if self.params["huberloss"]:
+            # Huber loss
+            try:
+                return tf.select(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)
+            except:
+                return tf.where(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)
+        else:
+            return tf.square(x)
             
         
     def takeAction(self,state=None,eps_ext=None):
@@ -408,9 +413,10 @@ if __name__ == '__main__':
             "timesteps":20000,#10000,
             "batchsize":32,
             "replaymemory":250000,
-            "targetupdate":10000,
+            "targetupdate":40000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
+            "huberloss":False,
             "gradientmomentum":0.99,
             "sqgradientmomentum":0.95,
             "mingradientmomentum":0.00,
@@ -422,12 +428,13 @@ if __name__ == '__main__':
             "frames":4,
             "actionsize": env.action_space.n,
             "traindir":"./train_dir",
-            "summary_steps":250,
+            "summary_steps":500,
             "skip_episodes": 50,
             "framewrite_episodes":100,
             "checkpoint_dir":'checkpoints',
             "checkpoint_steps":200000,
-            "latest_run":args.checkpoint
+            "latest_run":args.checkpoint,
+            "metricupdate":40
     }
     
     params["Env"]=envname
@@ -451,7 +458,6 @@ if __name__ == '__main__':
         t2Frame=0
         for e in xrange(params['epoches']):
             #episode loop
-            cumRewards=[]
             print("Starting epoche {}".format(e))
             ep_ctr=0
             t1=time.clock()
@@ -522,17 +528,8 @@ if __name__ == '__main__':
                         t2Frame=time.clock()
                     
                     
-#                    if c%50==0:
-#                        dtFrame=(t2Frame-t1Frame)
-#                        t2=time.clock()
-#                        if t>0:
-#                            rate=ep_ctr/(t2-t1)
-#                            print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
-#                        sys.stdout.flush()
-                        
-
                     if done: 
-                        if i%20==0:
+                        if i%params["metricupdate"]==0:
                             dtFrame=(t2Frame-t1Frame)
                             t2=time.clock()
                             if t>0:
@@ -540,10 +537,7 @@ if __name__ == '__main__':
                                 print("\r[Epis: {} || it-rate: {} || Loss: {} || db time: {}|| Frame: {}]".format(i,rate,loss,dtFrame,c),end='')
                             
                             sys.stdout.flush()
-                            
-                            cumRewards.append(rcum)
-                            dqa.saveRewards(cumRewards,t)
-                            dqa.saveItRate(ep_ctr/(t2-t1))
+                            dqa.saveStats(rcum,t,ep_ctr/(t2-t1))
                         break
                     
                 
@@ -592,16 +586,17 @@ if __name__ == '__main__':
                         testq.append(np.mean(qmean))
                         testreward.append(rcum)
                         if s%10==0:
-                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,qmean))
+                            print("[Test: {} || Reward: {} || Mean Q: {}]".format(s,rcum,np.mean(qmean)))
 #                        sys.stdout.flush()
                         break
             
             qepoche=np.mean(testq)
             qepoche_std=np.std(testq)
             repoche=np.mean(testreward)
+            rmax=np.max(testreward)
             repoche_std=np.std(testreward)
             epoche_fd.write("%d\t%.5f\t%.5f\t%.5f\t%.5f\n"%(e,qepoche,qepoche_std,repoche,repoche_std))
-            dqa.epocheStats(repoche,qepoche)
+            dqa.epocheStats(repoche,qepoche,rmax)
             print("Test stats after epoche {}: Q: {} ({}) || R: {} ({})".format(e,qepoche,qepoche_std,repoche,repoche_std)) 
             epoche_done=False
                     
