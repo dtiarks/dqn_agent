@@ -340,8 +340,6 @@ class DQNAgent(object):
         #Needs frameskipping: every C steps reset target weights!
 
         xp_feed_dict=self._sampleTransitionBatch(batchsize=self.params['batchsize'])
-
-        #self.sess.run([self.train],feed_dict=xp_feed_dict, options=self.run_options, run_metadata=self.run_metadata)
         
         self.sess.run([self.train],feed_dict=xp_feed_dict)
         
