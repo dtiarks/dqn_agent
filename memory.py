@@ -24,7 +24,7 @@ class ReplayMemory():
         
         self.frame_buffer=np.empty(np.append(self.size,frame_shape),dtype=np.uint8)
         self.action_buffer=np.empty(size,dtype=np.uint8)
-        self.reward_buffer=np.empty(size,dtype=np.uint16)
+        self.reward_buffer=np.empty(size,dtype=np.int16)
         self.new_frame_buffer=np.empty(np.append(self.size,frame_shape),dtype=np.uint8)
         self.done_buffer=np.empty(np.append(self.size,[6]),dtype=np.bool)
         
