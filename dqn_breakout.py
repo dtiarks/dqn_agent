@@ -414,7 +414,7 @@ if __name__ == '__main__':
             "targetupdate":40000,
             "discount":0.99,
             "learningrate":0.00025,#0.00025,
-            "huberloss":False,
+            "huberloss":True,
             "gradientmomentum":0.99,
             "sqgradientmomentum":0.95,
             "mingradientmomentum":0.00,
